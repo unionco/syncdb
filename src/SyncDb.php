@@ -54,7 +54,7 @@ class SyncDb
                 'timing' => 'remote download',
                 'cmd' => $remote->getRemoteDownloadCommand(
                     $settings->sqlDumpFileTarball,
-                    $settings->sqlDumpPath()
+                    $settings->sqlDumpPath(true, $settings->sqlDumpFileTarball)
                 ),
             ],
             [
