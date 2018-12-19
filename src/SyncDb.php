@@ -39,7 +39,7 @@ class SyncDb
         ];
 
         foreach ($steps as $step) {
-            Util::exec($step);
+            Util::exec($step, $logger);
         }
     }
 
@@ -88,7 +88,7 @@ class SyncDb
         ];
 
         foreach ($steps as $step) {
-            Util::exec($cmd);
+            Util::exec($cmd, $logger);
         }
     }
 
