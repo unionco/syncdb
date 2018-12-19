@@ -1,0 +1,22 @@
+{
+    "name": "abryrath/syncdb",
+    "description": "Library to assist with syncing databases across different environments",
+    "type": "library",
+    "license": "MIT",
+    "version": "0.1.0",
+    "authors": [
+        {
+            "name": "Abry Rath",
+            "email": "abryrath@gmail.com"
+        }
+    ],
+    "minimum-stability": "beta",
+    "require": {
+        "vlucas/phpdotenv": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "abryrath\\syncdb\\": "src/"
+        }
+    }
+}
