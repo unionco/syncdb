@@ -60,7 +60,7 @@ class SyncDb
                 'timing' => 'remote dump',
                 'cmd' => $remote->getRemoteDumpCommand(),
             ]),
-            new Comand([
+            new Command([
                 'timing' => 'remote download',
                 'cmd' => $remote->getRemoteDownloadCommand(
                     $settings->sqlDumpFileTarball,
