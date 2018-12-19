@@ -99,7 +99,7 @@ class Util
 
         $cmd = $command->getCommand();
         $timing = $command->getTiming();
-        $log = $comming->getLogging();
+        $log = $command->getLogging();
         
         $startTime = null;
         $endTime = null;
