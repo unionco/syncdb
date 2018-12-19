@@ -88,7 +88,7 @@ class SyncDb
         ];
 
         foreach ($steps as $step) {
-            Util::exec($cmd, $logger);
+            Util::exec($step, $logger);
         }
     }
 
