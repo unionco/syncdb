@@ -2,6 +2,7 @@
 
 namespace abryrath\syncdb\util;
 
-interface Logger {
+interface Logger
+{
     public function log($text, $level = 'normal') : void;
 }

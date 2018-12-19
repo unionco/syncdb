@@ -17,11 +17,6 @@ class Settings
     public $sqlDumpFileTarball;
     public $remoteDumpCommand;
 
-    public function __construct()
-    {
-        
-    }
-
     public function valid(): bool
     {
         if (!$this->environments || !count($this->environments)) {
@@ -120,6 +115,5 @@ class Settings
         } else {
             return Util::storagePath($this->backupDirectory);
         }
-
     }
 }
