@@ -3,6 +3,7 @@
 namespace abryrath\syncdb;
 
 use abryrath\syncdb\LocalCommands;
+use abryrath\syncdb\util\Command;
 use abryrath\syncdb\models\Settings;
 use abryrath\syncdb\util\Logger;
 use abryrath\syncdb\util\Util;
