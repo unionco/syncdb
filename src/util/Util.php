@@ -92,16 +92,30 @@ class Util
         return $storagePath . '/';
     }
 
-    public static function exec($cmd)
+    public static function exec(Command $command, Logger $logger = null)
     {
         $silent = false;
         $failOnError = true;
+
+        $cmd = $command->getCommand();
+        $timing = $command->getTiming();
+        $log = $comming->getLogging();
+        
+        $startTime = null;
+        $endTime = null;
+        if ($timing && $logger) {
+            $logger->log("Beginning {$timing}");
+            $startTime = microtime(true);
+        }
 
         if ($silent) {
             $cmd = $cmd . " 2>&1";
         }
 
-        echo $cmd . PHP_EOL;
+        if ($logger) {
+            $logger->log($cmd . PHP_EOL);
+        }
+
         $output = null;
         $returnVar = null;
 
@@ -112,5 +126,17 @@ class Util
             var_dump($returnVar);
             throw new \Exception("return non-zero:" . print_r($output, true));
         }
+
+        if ($timing && $logger) {
+            $endTime = microtime(true);
+            $diffTime = number_format(($endTime - $startTime), 2);
+            $logger->log("Task {$timing} completed in {$diffTime} seconds" . PHP_EOL);
+        }
+
+        if ($log && $logger) {
+            $logger->log($log . PHP_EOL);
+        }
+
+        sleep(1);
     }
 }

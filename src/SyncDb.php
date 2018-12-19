@@ -2,10 +2,10 @@
 
 namespace abryrath\syncdb;
 
-use abryrath\syncdb\models\Settings;
 use abryrath\syncdb\LocalCommands;
-use abryrath\syncdb\util\Util;
+use abryrath\syncdb\models\Settings;
 use abryrath\syncdb\util\Logger;
+use abryrath\syncdb\util\Util;
 
 class SyncDb
 {
@@ -23,17 +23,26 @@ class SyncDb
         Util::checkBackupPath();
 
         $steps = [
-            LocalCommands::mysqlDumpCommand(),
-            LocalCommands::tarCommand(),
-            LocalCommands::rmCommand(),
+            new Command([
+                'timing' => 'mysqldump',
+                'cmd' => LocalCommands::mysqlDumpCommand(),
+            ]),
+            new Command([
+                'log' => 'Creating tarball archive',
+                'cmd' => LocalCommands::tarCommand(),
+            ]),
+            new Command([
+                'log' => 'Removing temporary files',
+                'cmd' => LocalCommands::rmCommand(),
+            ]),
         ];
 
-        foreach ($steps as $cmd) {
-            Util::exec($cmd);
+        foreach ($steps as $step) {
+            Util::exec($step);
         }
     }
 
-    public function sync(Logger $logger, $environment = 'production')
+    public function sync(Logger $logger = null, $environment = 'production')
     {
         $settings = static::$instance->getSettings();
 
@@ -46,62 +55,39 @@ class SyncDb
         $remote = $settings->environments[$environment];
 
         $steps = [
-            [
+            new Command([
                 'timing' => 'remote dump',
                 'cmd' => $remote->getRemoteDumpCommand(),
-            ],
-            [
+            ]),
+            new Comand([
                 'timing' => 'remote download',
                 'cmd' => $remote->getRemoteDownloadCommand(
                     $settings->sqlDumpFileTarball,
                     $settings->sqlDumpPath(true, $settings->sqlDumpFileTarball)
                 ),
-            ],
-            [
+            ]),
+            new Command([
                 'cmd' => $remote->getRemoteDeleteCommand($settings->sqlDumpFileTarball),
                 'log' => 'Remote file deleted',
-            ],
-            [
+            ]),
+            new Command([
                 'cmd' => LocalCommands::extractCommand(),
                 'log' => 'Tarball extracted',
-            ],
-            [
+            ]),
+            new Command([
                 'cmd' => LocalCommands::importCommand(),
                 'log' => 'Local dump complete',
-            ],
-            [
+            ]),
+            new Command([
                 'cmd' => 'rm ' . $settings->sqlDumpPath(true, $settings->sqlDumpFileName),
-            ],
-            [
+            ]),
+            new Command([
                 'cmd' => 'rm ' . $settings->sqlDumpPath(true, $settings->sqlDumpFileTarball),
-            ],
+            ]),
         ];
 
         foreach ($steps as $step) {
-            $cmd = $step['cmd'];
-            $timing = $step['timing'] ?? false;
-            $log = $step['log'] ?? false;
-
-            $startTime = null;
-            $endTime = null;
-            if ($timing && $logger) {
-                $logger->log("Beginning {$timing}");
-                $startTime = microtime(true);
-            }
-
             Util::exec($cmd);
-
-            if ($timing && $logger) {
-                $endTime = microtime(true);
-                $diffTime = number_format(($endTime - $startTime), 2);
-                $logger->log("Task {$timing} completed in {$diffTime} seconds" . PHP_EOL);
-            }
-
-            if ($log && $logger) {
-                $logger->log($log . PHP_EOL);
-            }
-
-            sleep(1);
         }
     }
 
