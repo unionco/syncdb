@@ -4,7 +4,7 @@ namespace abryrath\syncdb\util;
 
 interface Logger
 {
-    public function log($text, $level = 'normal'): void;
-    public function logCmd($text): void;
-    public function logOutput($text): void;
+    public function log(string $text, string $level = 'normal'): void;
+    public function logCmd(string $text): void;
+    public function logOutput(array $text): void;
 }
