@@ -5,7 +5,7 @@ namespace abryrath\syncdb;
 use abryrath\syncdb\LocalCommands;
 use abryrath\syncdb\util\Command;
 use abryrath\syncdb\models\Settings;
-use abryrath\syncdb\util\Logger;
+use abryrath\syncdb\util\LoggerInterface;
 use abryrath\syncdb\util\Util;
 
 class SyncDb
@@ -19,7 +19,7 @@ class SyncDb
         $this->settings = Settings::parse($opts);
     }
 
-    public function dump(Logger $logger = null)
+    public function dump(LoggerInterface $logger = null)
     {
         Util::checkBackupPath();
 
@@ -43,7 +43,7 @@ class SyncDb
         }
     }
 
-    public function sync(Logger $logger = null, $environment = 'production')
+    public function sync(LoggerInterface $logger = null, $environment = 'production')
     {
         $settings = static::$instance->getSettings();
 

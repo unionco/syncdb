@@ -4,6 +4,7 @@ namespace abryrath\syncdb\util;
 
 use Dotenv\Dotenv;
 use abryrath\syncdb\SyncDb;
+use abryrath\syncdb\util\LoggerInterface;
 
 class Util
 {
@@ -92,7 +93,7 @@ class Util
         return $storagePath . '/';
     }
 
-    public static function exec(Command $command, Logger $logger = null)
+    public static function exec(Command $command, LoggerInterface $logger = null)
     {
         //var_dump(get_class_methods(Logger::class));
         //var_dump($logger);
@@ -123,12 +124,7 @@ class Util
 
         exec($cmd, $output, $returnVar);
 
-        try {
-            $logger->logOutput($output);
-        } catch (\Exception $e) {
-            print_r($e->getTrace());
-            $logger->log($e->getMessage());
-        }
+        $logger->logOutput($output);
 
         if ($returnVar != 0) {
             var_dump($output);
