@@ -1,12 +1,12 @@
 <?php
 
-namespace abryrath\syncdb;
+namespace unionco\syncdb;
 
-use abryrath\syncdb\LocalCommands;
-use abryrath\syncdb\util\Command;
-use abryrath\syncdb\models\Settings;
-use abryrath\syncdb\util\LoggerInterface;
-use abryrath\syncdb\util\Util;
+use unionco\syncdb\LocalCommands;
+use unionco\syncdb\util\Command;
+use unionco\syncdb\models\Settings;
+use unionco\syncdb\util\LoggerInterface;
+use unionco\syncdb\util\Util;
 
 class SyncDb
 {

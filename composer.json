@@ -1,5 +1,5 @@
 {
-    "name": "abryrath/syncdb",
+    "name": "unionco/syncdb",
     "description": "Library to assist with syncing databases across different environments",
     "type": "library",
     "license": "MIT",
@@ -7,7 +7,7 @@
     "authors": [
         {
             "name": "Abry Rath",
-            "email": "abryrath@gmail.com"
+            "email": "unionco@gmail.com"
         }
     ],
     "minimum-stability": "beta",
@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "abryrath\\syncdb\\": "src/"
+            "unionco\\syncdb\\": "src/"
         }
     }
 }

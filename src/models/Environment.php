@@ -1,8 +1,8 @@
 <?php
 
-namespace abryrath\syncdb\models;
+namespace unionco\syncdb\models;
 
-use abryrath\syncdb\SyncDb;
+use unionco\syncdb\SyncDb;
 
 class Environment
 {

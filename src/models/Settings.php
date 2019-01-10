@@ -1,8 +1,8 @@
 <?php
 
-namespace abryrath\syncdb\models;
+namespace unionco\syncdb\models;
 
-use abryrath\syncdb\util\Util;
+use unionco\syncdb\util\Util;
 use Exception;
 
 class Settings

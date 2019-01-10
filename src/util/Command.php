@@ -1,6 +1,6 @@
 <?php
 
-namespace abryrath\syncdb\util;
+namespace unionco\syncdb\util;
 
 class Command
 {

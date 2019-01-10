@@ -1,10 +1,10 @@
 <?php
 
-namespace abryrath\syncdb\util;
+namespace unionco\syncdb\util;
 
 use Dotenv\Dotenv;
-use abryrath\syncdb\SyncDb;
-use abryrath\syncdb\util\LoggerInterface;
+use unionco\syncdb\SyncDb;
+use unionco\syncdb\util\LoggerInterface;
 
 class Util
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace abryrath\syncdb;
+namespace unionco\syncdb;
 
-use abryrath\syncdb\util\Util;
+use unionco\syncdb\util\Util;
 
 class LocalCommands
 {
