@@ -113,13 +113,15 @@ class Util
         }
 
         if ($logger) {
-            $logger->log($cmd . PHP_EOL);
+            $logger->logCmd($cmd . PHP_EOL);
         }
 
         $output = null;
         $returnVar = null;
 
         exec($cmd, $output, $returnVar);
+
+        $logger->logOutput($output . PHP_EOL);
 
         if ($returnVar != 0) {
             var_dump($output);
