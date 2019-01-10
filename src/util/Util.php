@@ -94,6 +94,8 @@ class Util
 
     public static function exec(Command $command, Logger $logger = null)
     {
+        //var_dump(get_class_methods(Logger::class));
+        //var_dump($logger);
         $silent = false;
         $failOnError = true;
 
@@ -121,7 +123,12 @@ class Util
 
         exec($cmd, $output, $returnVar);
 
-        $logger->logOutput($output . PHP_EOL);
+        try {
+            $logger->logOutput($output);
+        } catch (\Exception $e) {
+            print_r($e->getTrace());
+            $logger->log($e->getMessage());
+        }
 
         if ($returnVar != 0) {
             var_dump($output);
