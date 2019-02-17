@@ -18,5 +18,8 @@
         "psr-4": {
             "unionco\\syncdb\\": "src/"
         }
+    },
+    "require-dev": {
+        "vimeo/psalm": "^3.0"
     }
 }

@@ -14,15 +14,25 @@ use Symfony\Component\Console\Formatter\OutputFormatter;
 
 class SyncDb
 {
+    /** @var SyncDb */
     public static $instance;
+
+    /** @var Settings */
     private $settings;
 
+    /**
+     * @param array $opts
+     */
     public function __construct($opts = [])
     {
         static::$instance = $this;
         $this->settings = Settings::parse($opts);
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @return void
+     */
     public function dump(LoggerInterface $logger = null)
     {
         Util::checkBackupPath();
@@ -52,6 +62,11 @@ class SyncDb
         }
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @param string $environment
+     * @return void
+     */
     public function sync(LoggerInterface $logger = null, $environment = 'production')
     {
         $settings = static::$instance->getSettings();
@@ -97,15 +112,22 @@ class SyncDb
         ];
 
         if ($logger === null) {
-            $output = new ConsoleOutput(Output::VERBOSITY_DEBUG, true);
+            $output = new ConsoleOutput($settings->verbosity ?? Output::VERBOSITY_DEBUG, true);
             $logger = new ConsoleLogger($output);
         }
+
+        $logger->notice("Starting database sync");
 
         foreach ($steps as $step) {
             Util::exec($step, $logger);
         }
+
+        $logger->notice("Database sync complete");
     }
 
+    /**
+     * @return Settings
+     */
     public function getSettings()
     {
         return $this->settings;

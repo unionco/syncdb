@@ -2,20 +2,42 @@
 
 namespace unionco\syncdb\models;
 
-use unionco\syncdb\util\Util;
 use Exception;
+use unionco\syncdb\models\Environment;
+use unionco\syncdb\util\Util;
+use Symfony\Component\Console\Output\Output;
 
 class Settings
 {
-    public $mysqlClientPath;
-    public $mysqlDumpPath;
-    public $environments;
-    public $baseDir;
-    public $storagePath;
-    public $backupDirectory;
-    public $sqlDumpFileName;
-    public $sqlDumpFileTarball;
-    public $remoteDumpCommand;
+    /** @var string */
+    public $mysqlClientPath = '';
+
+    /** @var string */
+    public $mysqlDumpPath = '';
+
+    /** @var array<Environment> */
+    public $environments = [];
+
+    /** @var string */
+    public $baseDir = '';
+
+    /** @var string */
+    public $storagePath = '';
+
+    /** @var string */
+    public $backupDirectory = '';
+
+    /** @var string */
+    public $sqlDumpFileName = '';
+
+    /** @var string */
+    public $sqlDumpFileTarball = '';
+
+    /** @var string */
+    public $remoteDumpCommand = '';
+
+    /** @var int */
+    public $verbosity = Output::VERBOSITY_VERBOSE;
 
     public function valid(): bool
     {
@@ -36,7 +58,7 @@ class Settings
         return true;
     }
 
-    public static function parse(array $opts) : Settings
+    public static function parse(array $opts): Settings
     {
         $settings = new Settings();
 
@@ -48,14 +70,20 @@ class Settings
         $settings->sqlDumpFileName = $opts['sqlDumpFileName'] ?? 'db_dump.sql';
         $settings->sqlDumpFileTarball = $opts['sqlDumpFileTarball'] ?? $settings->sqlDumpFileName . '.tar.gz';
         $settings->remoteDumpCommand = $opts['remoteDumpCommand'] ?? '';
+        $settings->verbosity = $opts['verbosity'] ?? Output::VERBOSITY_VERBOSE;
         $settings->parseEnvironments($opts['environments'] ?? []);
 
         return $settings;
     }
 
-    private function parseEnvironments($environments): void
+    /**
+     * @param array|string $environments
+     * @return void
+     */
+    private function parseEnvironments($environments)
     {
         if (is_string($environments)) {
+            /** @psalm-suppress UnresolvableInclude */
             $environments = (require $environments)['remotes'];
         }
 
@@ -68,45 +96,57 @@ class Settings
         }
     }
 
-    public function getMysqlClientPath(): mixed
+    /**
+     * @return false|string
+     */
+    public function getMysqlClientPath()
     {
         // Check for explicit path in .env
+        /** @var null|bool|string */
         $path = Util::env('MYSQL_CLIENT_PATH');
-
-        if ($path && Util::checkExecutable($path)) {
-            return $path;
-        }
-
-        // Check some common locations
-        foreach (['/usr/bin/mysqldump', '/usr/local/bin/mysqldump'] as $path) {
+        if ($path) {
+            $path = (string) $path;
             if (Util::checkExecutable($path)) {
                 return $path;
+            }
+        } else {
+            foreach (['/usr/bin/mysql', '/usr/local/bin/mysql'] as $path) {
+                if (Util::checkExecutable($path)) {
+                    return $path;
+                }
             }
         }
 
         return false;
     }
 
+    /**
+     * @return false|string
+     */
     public function getMysqlDumpPath()
     {
         // Check for explicit path in .env
+        /** @var null|bool|string */
         $path = Util::env('MYSQL_DUMP_PATH');
 
-        if ($path && Util::checkExecutable($path)) {
-            return $path;
-        }
-
-        // Check some common locations
-        foreach (['/usr/bin/mysqldump', '/usr/local/bin/mysqldump'] as $path) {
+        if ($path) {
+            $path = (string) $path;
             if (Util::checkExecutable($path)) {
                 return $path;
+            }
+        } else {
+            // Check some common locations
+            foreach (['/usr/bin/mysqldump', '/usr/local/bin/mysqldump'] as $path) {
+                if (Util::checkExecutable($path)) {
+                    return $path;
+                }
             }
         }
 
         return false;
     }
 
-    public function sqlDumpPath(bool $file = true, string $fileName = '') : string
+    public function sqlDumpPath(bool $file = true, string $fileName = ''): string
     {
         if ($file && !$fileName) {
             return Util::storagePath($this->backupDirectory . $this->sqlDumpFileName);

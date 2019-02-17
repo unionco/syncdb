@@ -6,14 +6,31 @@ use unionco\syncdb\SyncDb;
 
 class Environment
 {
-    public $name;
-    public $host;
-    public $port;
-    public $username;
-    public $phpPath;
-    public $root;
-    public $backupDirectory;
+    /** @var string */
+    private $_error = '';
 
+    /** @var string */
+    public $name = '';
+
+    /** @var string */
+    public $host = '';
+
+    /** @var int */
+    public $port = 22;
+
+    /** @var string */
+    public $username = '';
+
+    /** @var string */
+    public $phpPath = '';
+
+    /** @var string */
+    public $root = '';
+
+    /** @var string */
+    public $backupDirectory = '';
+
+    /** @var array<string> */
     public static $required = [
         'name',
         'host',
@@ -21,12 +38,11 @@ class Environment
         'root',
     ];
 
-    public function __construct()
-    {
-        $this->port = 22;
-    }
-
-    public function readConfig(array $config): void
+    /**
+     * @param array $config
+     * @return void
+     */
+    public function readConfig(array $config)
     {
         if (key_exists('name', $config)) {
             $this->setName($config['name']);
@@ -57,37 +73,65 @@ class Environment
         }
     }
 
-    public function setName(string $name): void
+    /**
+     * @param string $name
+     * @return void
+     */
+    public function setName(string $name)
     {
         $this->name = $name;
     }
 
-    public function setHost(string $host): void
+    /**
+     * @param string $host
+     * @return void
+     */
+    public function setHost(string $host)
     {
         $this->host = $host;
     }
 
-    public function setPort(int $port): void
+    /**
+     * @param int $port
+     * @return void
+     */
+    public function setPort(int $port)
     {
         $this->port = $port;
     }
 
-    public function setUsername(string $username): void
+    /**
+     * @param string $username
+     * @return void
+     */
+    public function setUsername(string $username)
     {
         $this->username = $username;
     }
 
-    public function setPhpPath(string $phpPath): void
+    /**
+     * @param string $phpPath
+     * @return void
+     */
+    public function setPhpPath(string $phpPath)
     {
         $this->phpPath = $phpPath;
     }
 
-    public function setRoot(string $root): void
+    /**
+     * @param string $root
+     * @return void
+     */
+    public function setRoot(string $root)
     {
         $this->root = $root;
     }
 
-    public function setBackupDirectory(string $backupDirectory): void
+    /**
+     * @param string $backupDirectory
+     * @return void
+     */
+    public function setBackupDirectory(string $backupDirectory)
     {
         if (substr($backupDirectory, strlen($backupDirectory) - 1, 1) != DIRECTORY_SEPARATOR) {
             $backupDirectory .= DIRECTORY_SEPARATOR;
@@ -95,10 +139,14 @@ class Environment
         $this->backupDirectory = $backupDirectory;
     }
 
+    /**
+     * @return bool
+     */
     public function valid()
     {
         foreach (static::$required as $required) {
             if (!$this->{$required}) {
+                $this->_error = 'Missing required field: ' . $required;
                 return false;
             }
         }
@@ -106,8 +154,18 @@ class Environment
         return true;
     }
 
+    /** @return string */
+    public function getError(): string
+    {
+        return $this->_error;
+    }
+
+    /**
+     * @return string
+     */
     public function getSshCommand(): string
     {
+        /** @var string */
         $cmd = 'ssh ';
         if ($this->username) {
             $cmd .= "{$this->username}@";
@@ -121,21 +179,30 @@ class Environment
         return $cmd;
     }
 
+    /**
+     * @return string
+     */
     public function getRemoteDumpCommand(): string
     {
+        /** @var Settings */
         $settings = SyncDb::$instance->getSettings();
+        
+        /** @var string */
         $dumpMysqlCommand = $this->root . '/' . $settings->remoteDumpCommand;
-        //Craftsyncdb::CONSOLE_PREFIX . '/' . Craftsyncdb::DUMP_COMMAND;
         $cmd = $this->getSshCommand();
         $cmd .= " \"{$this->phpPath} {$dumpMysqlCommand}\"";
-        //{$this->root}/craft {$dumpMysqlCommand}\"";
 
         return $cmd;
     }
 
+    /**
+     * @param string $filename
+     * @param string $localPath
+     * @return string
+     */
     public function getRemoteDownloadCommand(string $filename, string $localPath): string
     {
-        //var_dump($localPath); die;
+        /** @var string */
         $cmd = "scp ";
         if ($this->port && $this->port != 22) {
             $cmd .= "-P {$this->port} ";
@@ -150,8 +217,13 @@ class Environment
         return $cmd;
     }
 
+    /**
+     * @param string $filename
+     * @return string
+     */
     public function getRemoteDeleteCommand(string $filename): string
     {
+        /** @var string */
         $cmd = $this->getSshCommand();
         $cmd .= " rm {$this->backupDirectory}{$filename}";
 

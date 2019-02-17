@@ -6,10 +6,17 @@ use unionco\syncdb\util\Util;
 
 class LocalCommands
 {
+    /**
+     * @return string
+     */
     public static function mysqlDumpCommand()
     {
+        /** @var \unionco\syncdb\models\Settings */
         $settings = SyncDb::$instance->getSettings();
+        
+        /** @var string */
         $mysqlDumpPath = $settings->getMysqlDumpPath();
+        
         if (!$mysqlDumpPath) {
             throw new \Exception('mysqldump executable not found');
         }
@@ -37,10 +44,17 @@ class LocalCommands
         return $cmd;
     }
 
+    /**
+     * @return string
+     */
     public static function importCommand(): string
     {
+        /** @var \unionco\syncdb\models\Settings */
         $settings = SyncDb::$instance->getSettings();
+
+        /** @var string */
         $cmd = "mysql ";
+
         if ($dbUser = Util::env('DB_USER')) {
             $cmd .= "-u {$dbUser} ";
         }
@@ -64,9 +78,15 @@ class LocalCommands
         return $cmd;
     }
 
+    /**
+     * @return string
+     */
     public static function tarCommand(): string
     {
+        /** @var string */
         $cmd = '';
+
+        /** @var \unionco\syncdb\models\Settings */
         $settings = SyncDb::$instance->getSettings();
 
         if ($dumpPath = $settings->sqlDumpPath(false)) {
@@ -81,7 +101,10 @@ class LocalCommands
 
     public static function extractCommand(): string
     {
+        /** @var \unionco\syncdb\models\Settings */
         $settings = SyncDb::$instance->getSettings();
+        
+        /** @var string */
         $cmd = "cd ";
         $cmd .= $settings->sqlDumpPath(false);
         $cmd .= " && tar -xzvf ";
@@ -92,7 +115,10 @@ class LocalCommands
 
     public static function rmCommand(): string
     {
+        /** @var string */
         $cmd = '';
+
+        /** @var \unionco\syncdb\models\Settings */
         $settings = SyncDb::$instance->getSettings();
 
         if ($dumpPath = $settings->sqlDumpPath()) {
