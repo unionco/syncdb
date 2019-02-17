@@ -2,11 +2,15 @@
 
 namespace unionco\syncdb;
 
-use unionco\syncdb\LocalCommands;
-use unionco\syncdb\util\Command;
-use unionco\syncdb\models\Settings;
-use unionco\syncdb\util\LoggerInterface;
+use Psr\Log\LoggerInterface;
 use unionco\syncdb\util\Util;
+use unionco\syncdb\util\Command;
+use unionco\syncdb\LocalCommands;
+use unionco\syncdb\models\Settings;
+use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 class SyncDb
 {
@@ -37,6 +41,11 @@ class SyncDb
                 'cmd' => LocalCommands::rmCommand(),
             ]),
         ];
+
+        if ($logger === null) {
+            $output = new ConsoleOutput();
+            $logger = new ConsoleLogger($output);
+        }
 
         foreach ($steps as $step) {
             Util::exec($step, $logger);
@@ -86,6 +95,11 @@ class SyncDb
                 'cmd' => 'rm ' . $settings->sqlDumpPath(true, $settings->sqlDumpFileTarball),
             ]),
         ];
+
+        if ($logger === null) {
+            $output = new ConsoleOutput(Output::VERBOSITY_DEBUG, true);
+            $logger = new ConsoleLogger($output);
+        }
 
         foreach ($steps as $step) {
             Util::exec($step, $logger);

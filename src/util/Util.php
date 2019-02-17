@@ -4,7 +4,7 @@ namespace unionco\syncdb\util;
 
 use Dotenv\Dotenv;
 use unionco\syncdb\SyncDb;
-use unionco\syncdb\util\LoggerInterface;
+use Psr\Log\LoggerInterface;
 
 class Util
 {
@@ -107,7 +107,7 @@ class Util
         $startTime = null;
         $endTime = null;
         if ($timing && $logger) {
-            $logger->log("Beginning {$timing}");
+            $logger->info("Beginning {$timing}");
             $startTime = microtime(true);
         }
 
@@ -116,7 +116,7 @@ class Util
         }
 
         if ($logger) {
-            $logger->logCmd($cmd . PHP_EOL);
+            $logger->info($cmd . PHP_EOL);
         }
 
         $output = null;
