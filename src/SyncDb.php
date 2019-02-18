@@ -31,7 +31,7 @@ class SyncDb
 
     /**
      * @param LoggerInterface $logger
-     * @return void
+     * @return bool
      */
     public function dump(LoggerInterface $logger = null)
     {
@@ -60,12 +60,14 @@ class SyncDb
         foreach ($steps as $step) {
             Util::exec($step, $logger);
         }
+
+        return true;
     }
 
     /**
      * @param LoggerInterface $logger
      * @param string $environment
-     * @return void
+     * @return bool
      */
     public function sync(LoggerInterface $logger = null, $environment = 'production')
     {
@@ -123,6 +125,8 @@ class SyncDb
         }
 
         $logger->notice("Database sync complete");
+
+        return true;
     }
 
     /**

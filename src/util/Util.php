@@ -121,7 +121,7 @@ class Util
         $silent = true;
 
         /** @var bool */
-        $failOnError = true;
+        $failOnError = false;
 
         /** @var array */
         $output = [];
@@ -168,12 +168,15 @@ class Util
         if ($returnVar != 0) {
             if ($logger) {
                 $logger->error("return non-zero: {$returnVar}");
+                $logger->error("Failed on command: {$cmd}");
             
                 foreach ($output as $line) {
                     $logger->error($line);
                 }
             }
-            die;
+            if ($failOnError) {
+                die;
+            }
         }
 
         if ($timing && $logger) {
