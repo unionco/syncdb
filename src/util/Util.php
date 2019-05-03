@@ -3,13 +3,17 @@
 namespace unionco\syncdb\util;
 
 use Dotenv\Dotenv;
+use Psr\Log\LoggerInterface;
 use unionco\syncdb\SyncDb;
-use unionco\syncdb\util\LoggerInterface;
 
 class Util
 {
+    /** @var bool */
     private static $loaded = false;
 
+    /**
+     * @return void
+     */
     private static function loadEnv()
     {
         $baseDir = SyncDb::$instance->getSettings()->baseDir;
@@ -21,17 +25,25 @@ class Util
         }
     }
 
+    /**
+     * @return void
+     */
     public static function checkBackupPath()
     {
         $backupPath = SyncDb::$instance->getSettings()
             ->sqlDumpPath(false);
-        //$backupPath = static::sqlDumpPath();
+
         if (!file_exists($backupPath)) {
             mkdir($backupPath, 0777, true);
         }
     }
 
-    public static function env($key, $default = null)
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return bool|null|string
+     */
+    public static function env(string $key, $default = null)
     {
         static::loadEnv();
 
@@ -58,21 +70,22 @@ class Util
 
             case 'null':
             case '(null)':
-                return;
+                return null;
         }
-
-        // if (strlen($value) > 1 && StringHelper::startsWith($value, '"') && StringHelper::endsWith($value, '"')) {
-        //     return substr($value, 1, -1);
-        // }
 
         return $value;
     }
 
     public static function checkExecutable(string $path): bool
     {
+        /** @var string  */
         $cmd = "which {$path}";
-        $output = null;
-        $returnVar = null;
+        
+        /** @var array */
+        $output = [];
+
+        /** @var int */
+        $returnVar = 0;
 
         exec($cmd, $output, $returnVar);
 
@@ -83,6 +96,10 @@ class Util
         return true;
     }
 
+    /**
+     * @param null|string $path
+     * @return string
+     */
     public static function storagePath($path = null)
     {
         $storagePath = SyncDb::$instance->getSettings()->storagePath;
@@ -93,23 +110,42 @@ class Util
         return $storagePath . '/';
     }
 
+    /**
+     * @param Command $command
+     * @param LoggerInterface $logger
+     * @return void
+     */
     public static function exec(Command $command, LoggerInterface $logger = null)
     {
-        //var_dump(get_class_methods(Logger::class));
-        //var_dump($logger);
-        $silent = false;
-        
-        /** @todo */
-        $failOnError = true;
+        /** @var bool */
+        $silent = true;
 
+        /** @var bool */
+        $failOnError = false;
+
+        /** @var array */
+        $output = [];
+
+        /** @var int */
+        $returnVar = 0;
+
+        /** @var string */
         $cmd = $command->getCommand();
+
+        /** @var string */
         $timing = $command->getTiming();
+
+        /** @var bool */
         $log = $command->getLogging();
-        
-        $startTime = null;
-        $endTime = null;
+
+        /** @var float */
+        $startTime = 0.0;
+
+        /** @var float */
+        $endTime = 0.0;
+
         if ($timing && $logger) {
-            $logger->log("Beginning {$timing}");
+            $logger->info("Beginning {$timing}");
             $startTime = microtime(true);
         }
 
@@ -118,32 +154,40 @@ class Util
         }
 
         if ($logger) {
-            $logger->logCmd($cmd . PHP_EOL);
+            $logger->debug($cmd);
         }
-
-        $output = null;
-        $returnVar = null;
 
         exec($cmd, $output, $returnVar);
 
-        $logger->logOutput($output);
+        foreach ($output as $line) {
+            if ($logger) {
+                $logger->debug($line);
+            }
+        }
 
         if ($returnVar != 0) {
-            var_dump($output);
-            var_dump($returnVar);
-            throw new \Exception("return non-zero:" . print_r($output, true));
+            if ($logger) {
+                $logger->error("return non-zero: {$returnVar}");
+                $logger->error("Failed on command: {$cmd}");
+            
+                foreach ($output as $line) {
+                    $logger->error($line);
+                }
+            }
+            if ($failOnError) {
+                die;
+            }
         }
 
         if ($timing && $logger) {
             $endTime = microtime(true);
             $diffTime = number_format(($endTime - $startTime), 2);
-            $logger->log("Task {$timing} completed in {$diffTime} seconds" . PHP_EOL);
+            $logger->info("Task {$timing} completed in {$diffTime} seconds");
         }
 
         if ($log && $logger) {
-            $logger->log($log . PHP_EOL);
+            $log->info($log);
         }
-
-        // sleep(1);
+        //sleep(1);
     }
 }

@@ -11,11 +11,15 @@
     ],
     "minimum-stability": "beta",
     "require": {
-        "vlucas/phpdotenv": "^2.5"
+        "vlucas/phpdotenv": "^2.5",
+        "symfony/console": "^4.2"
     },
     "autoload": {
         "psr-4": {
             "unionco\\syncdb\\": "src/"
         }
+    },
+    "require-dev": {
+        "vimeo/psalm": "^3.0"
     }
 }

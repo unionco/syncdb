@@ -2,17 +2,22 @@
 
 namespace unionco\syncdb;
 
-use unionco\syncdb\LocalCommands;
-use unionco\syncdb\util\Command;
-use unionco\syncdb\models\Settings;
-use unionco\syncdb\util\LoggerInterface;
+use Psr\Log\LoggerInterface;
 use unionco\syncdb\util\Util;
+use unionco\syncdb\util\Command;
+use unionco\syncdb\LocalCommands;
+use unionco\syncdb\models\Settings;
+use Symfony\Component\Console\Output\Output;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 class SyncDb
 {
     /** @var SyncDb $instance */
     public static $instance;
 
+    /** @var Settings */
     private $settings;
     
     /** @var bool Indicates if there is a sync active */
@@ -22,12 +27,19 @@ class SyncDb
 
     private $_logger;
 
+    /**
+     * @param array $opts
+     */
     public function __construct($opts = [])
     {
         static::$instance = $this;
         $this->settings = Settings::parse($opts);
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @return bool
+     */
     public function dump(LoggerInterface $logger = null)
     {
         Util::checkBackupPath();
@@ -47,11 +59,23 @@ class SyncDb
             ]),
         ];
 
+        if ($logger === null) {
+            $output = new ConsoleOutput();
+            $logger = new ConsoleLogger($output);
+        }
+
         foreach ($steps as $step) {
             Util::exec($step, $logger);
         }
+
+        return true;
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @param string $environment
+     * @return bool
+     */
     public function sync(LoggerInterface $logger = null, $environment = 'production')
     {
         $this->_logger = $logger;
@@ -99,6 +123,13 @@ class SyncDb
         ];
 
         $this->_running = true;
+        if ($logger === null) {
+            $output = new ConsoleOutput($settings->verbosity ?? Output::VERBOSITY_DEBUG, true);
+            $logger = new ConsoleLogger($output);
+        }
+
+        $logger->notice("Starting database sync");
+
         foreach ($steps as $step) {
             try {
                 Util::exec($step, $logger);
@@ -109,8 +140,15 @@ class SyncDb
         }
         $this->_running = false;
         $this->_success = true;
+
+        $logger->notice("Database sync complete");
+
+        return true;
     }
 
+    /**
+     * @return Settings
+     */
     public function getSettings()
     {
         return $this->settings;

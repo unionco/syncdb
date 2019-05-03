@@ -4,6 +4,18 @@ namespace unionco\syncdb\util;
 
 class Command
 {
+    /** @var string */
+    protected $cmd = '';
+
+    /** @var false|string */
+    protected $timing = false;
+
+    /** @var false|string */
+    protected $logging = false;
+
+    /**
+     * @param array $opts
+     */
     public function __construct($opts = [])
     {
         $this->cmd = $opts['cmd'] ?? '';
@@ -16,12 +28,12 @@ class Command
         return $this->cmd;
     }
 
-    public function getTiming()
+    public function getTiming(): string
     {
         return $this->timing;
     }
 
-    public function getLogging()
+    public function getLogging(): string
     {
         return $this->logging;
     }
