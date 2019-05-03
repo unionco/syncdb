@@ -6,6 +6,10 @@ use unionco\syncdb\SyncDb;
 
 class Environment
 {
+    const ENV_DEV = 'dev';
+    const ENV_STAGING = 'staging';
+    const ENV_PRODUCTION = 'production';
+
     public $name;
     public $host;
     public $port;
@@ -13,6 +17,7 @@ class Environment
     public $phpPath;
     public $root;
     public $backupDirectory;
+    public $environment;
 
     public static $required = [
         'name',
@@ -55,6 +60,10 @@ class Environment
         if (key_exists('backupDirectory', $config)) {
             $this->setBackupDirectory($config['backupDirectory']);
         }
+        
+        if (key_exists('environment', $config)) {
+            $this->setEnvironment($config['environment']);
+        }
     }
 
     public function setName(string $name): void
@@ -85,6 +94,11 @@ class Environment
     public function setRoot(string $root): void
     {
         $this->root = $root;
+    }
+
+    public function setEnvironment(string $environment): void
+    {
+        $this->environment = $environment;
     }
 
     public function setBackupDirectory(string $backupDirectory): void

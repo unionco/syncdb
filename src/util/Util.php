@@ -98,6 +98,8 @@ class Util
         //var_dump(get_class_methods(Logger::class));
         //var_dump($logger);
         $silent = false;
+        
+        /** @todo */
         $failOnError = true;
 
         $cmd = $command->getCommand();
@@ -142,6 +144,6 @@ class Util
             $logger->log($log . PHP_EOL);
         }
 
-        sleep(1);
+        // sleep(1);
     }
 }

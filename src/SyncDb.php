@@ -10,8 +10,17 @@ use unionco\syncdb\util\Util;
 
 class SyncDb
 {
+    /** @var SyncDb $instance */
     public static $instance;
+
     private $settings;
+    
+    /** @var bool Indicates if there is a sync active */
+    private $_running = false;
+
+    private $_success = false;
+
+    private $_logger;
 
     public function __construct($opts = [])
     {
@@ -45,6 +54,8 @@ class SyncDb
 
     public function sync(LoggerInterface $logger = null, $environment = 'production')
     {
+        $this->_logger = $logger;
+        $this->_success = false;
         $settings = static::$instance->getSettings();
 
         if (!$settings->valid()) {
@@ -87,13 +98,36 @@ class SyncDb
             ]),
         ];
 
+        $this->_running = true;
         foreach ($steps as $step) {
-            Util::exec($step, $logger);
+            try {
+                Util::exec($step, $logger);
+            } catch (\Exception $e) {
+                $this->_running = false;
+                $logger->logOutput(print_r($e->getMessage(), true));
+            }
         }
+        $this->_running = false;
+        $this->_success = true;
     }
 
     public function getSettings()
     {
         return $this->settings;
+    }
+
+    public function running(): bool
+    {
+        return $this->_running;
+    }
+
+    public function success(): bool
+    {
+        return $this->_success;
+    }
+
+    public function getLogger(): LoggerInterface
+    {
+        return $this->_logger;
     }
 }
