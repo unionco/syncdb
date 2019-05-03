@@ -76,7 +76,7 @@ class SyncDb
      * @param string $environment
      * @return bool
      */
-    public function sync(LoggerInterface $logger = null, $environment = 'production')
+    public function sync(LoggerInterface $logger = null, $environment = 'production', bool $background = false)
     {
         $this->_logger = $logger;
         $this->_success = false;

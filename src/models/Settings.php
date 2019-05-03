@@ -134,12 +134,11 @@ class Settings
             if (Util::checkExecutable($path)) {
                 return $path;
             }
-        } else {
-            // Check some common locations
-            foreach (['/usr/bin/mysqldump', '/usr/local/bin/mysqldump'] as $path) {
-                if (Util::checkExecutable($path)) {
-                    return $path;
-                }
+        }
+        // Check some common locations
+        foreach (['/usr/bin/mysqldump', '/usr/local/bin/mysqldump'] as $path) {
+            if (Util::checkExecutable($path)) {
+                return $path;
             }
         }
 

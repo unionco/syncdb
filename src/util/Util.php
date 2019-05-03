@@ -78,22 +78,23 @@ class Util
 
     public static function checkExecutable(string $path): bool
     {
-        /** @var string  */
-        $cmd = "which {$path}";
+        // /** @var string  */
+        // $cmd = "bash -c 'which {$path}'";
         
-        /** @var array */
-        $output = [];
+        // /** @var array */
+        // $output = [];
 
-        /** @var int */
-        $returnVar = 0;
+        // /** @var int */
+        // $returnVar = 0;
 
-        exec($cmd, $output, $returnVar);
+        // exec($cmd, $output, $returnVar);
 
-        if ($returnVar != 0) {
-            return false;
-        }
+        // if ($returnVar != 0) {
+        //     return false;
+        // }
 
-        return true;
+        // return true;
+        return \is_executable($path);
     }
 
     /**

@@ -10,14 +10,9 @@ class Environment
     const ENV_STAGING = 'staging';
     const ENV_PRODUCTION = 'production';
 
-    public $name;
-    public $host;
-    public $port;
-    public $username;
-    public $phpPath;
-    public $root;
-    public $backupDirectory;
+    
     public $environment;
+    
     /** @var string */
     private $_error = '';
 
@@ -147,7 +142,7 @@ class Environment
     {
         $this->environment = $environment;
     }
-    
+
     /**
      * @param string $backupDirectory
      * @return void
