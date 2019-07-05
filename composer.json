@@ -9,7 +9,7 @@
             "email": "unionco@gmail.com"
         }
     ],
-    "minimum-stability": "beta",
+    "minimum-stability": "stable",
     "require": {
         "vlucas/phpdotenv": "^2.5",
         "symfony/console": "^4.2||^3.0"

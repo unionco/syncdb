@@ -153,7 +153,6 @@ class Util
         if ($silent) {
             $cmd = $cmd . " 2>&1";
         }
-
         if ($logger) {
             $logger->debug($cmd);
         }

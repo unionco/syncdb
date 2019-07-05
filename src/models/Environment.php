@@ -3,6 +3,7 @@
 namespace unionco\syncdb\models;
 
 use unionco\syncdb\SyncDb;
+use Symfony\Component\Console\Output\Output;
 
 class Environment
 {
@@ -36,6 +37,8 @@ class Environment
 
     /** @var string */
     public $backupDirectory = '';
+
+    public $verbosity = Output::VERBOSITY_NORMAL;
 
     /** @var array<string> */
     public static $required = [
@@ -81,6 +84,10 @@ class Environment
         
         if (key_exists('environment', $config)) {
             $this->setEnvironment($config['environment']);
+        }
+
+        if (key_exists('verbosity', $config)) {
+            $this->setVerbosity($config['verbosity']);
         }
     }
 
@@ -153,6 +160,11 @@ class Environment
             $backupDirectory .= DIRECTORY_SEPARATOR;
         }
         $this->backupDirectory = $backupDirectory;
+    }
+
+    public function setVerbosity(int $verbosity)
+    {
+        $this->verbosity = $verbosity;
     }
 
     /**

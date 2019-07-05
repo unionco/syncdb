@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Formatter\OutputFormatter;
+use Psr\Log\LogLevel;
 
 class SyncDb
 {
@@ -76,7 +77,7 @@ class SyncDb
      * @param string $environment
      * @return bool
      */
-    public function sync(LoggerInterface $logger = null, $environment = 'production', bool $background = false)
+    public function sync(LoggerInterface $logger = null, $environment = 'production', bool $background = false, ?int $verbosityLevel = null)
     {
         $this->_logger = $logger;
         $this->_success = false;
@@ -124,8 +125,21 @@ class SyncDb
 
         $this->_running = true;
         if ($logger === null) {
-            $output = new ConsoleOutput($settings->verbosity ?? Output::VERBOSITY_DEBUG, true);
-            $logger = new ConsoleLogger($output);
+            // var_dump($settings); die;
+            if (!$verbosityLevel) {
+                $verbosityLevel = $settings->verbosity ?? Output::VERBOSITY_QUIET;
+            }
+            echo "Using verbosityLevel : $verbosityLevel \n";
+            $output = new ConsoleOutput($verbosityLevel, true);
+            $logger = new ConsoleLogger(
+                $output,
+                [
+                    LogLevel::INFO => Output::VERBOSITY_NORMAL,
+                    LogLevel::NOTICE => Output::VERBOSITY_NORMAL,
+                    LogLevel::DEBUG => Output::VERBOSITY_VERBOSE,
+                    LogLevel::ERROR => Output::VERBOSITY_NORMAL,
+                ]
+            );
         }
 
         $logger->notice("Starting database sync");
