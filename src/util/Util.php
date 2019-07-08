@@ -134,6 +134,9 @@ class Util
         $cmd = $command->getCommand();
 
         /** @var string */
+        $scrubbed = $command->getScrubbedCommand();
+
+        /** @var string */
         $timing = $command->getTiming();
 
         /** @var bool */
@@ -154,7 +157,7 @@ class Util
             $cmd = $cmd . " 2>&1";
         }
         if ($logger) {
-            $logger->debug($cmd);
+            $logger->debug($scrubbed);
         }
 
         exec($cmd, $output, $returnVar);
@@ -168,7 +171,7 @@ class Util
         if ($returnVar != 0) {
             if ($logger) {
                 $logger->error("return non-zero: {$returnVar}");
-                $logger->error("Failed on command: {$cmd}");
+                $logger->error("Failed on command: {$scrubbed}");
             
                 foreach ($output as $line) {
                     $logger->error($line);

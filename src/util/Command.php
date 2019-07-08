@@ -28,6 +28,15 @@ class Command
         return $this->cmd;
     }
 
+    public function getScrubbedCommand(): string
+    {
+        $cmd = $this->getCommand();
+        // Remove passwords from mysql/mysqldump commands
+        $scrubbed = preg_replace('/\-\-password=".*"/', '--password="*****', $cmd);
+
+        return $scrubbed;
+    }
+
     public function getTiming(): string
     {
         return $this->timing;

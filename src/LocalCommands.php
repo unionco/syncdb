@@ -20,6 +20,7 @@ class LocalCommands
         if (!$mysqlDumpPath) {
             throw new \Exception('mysqldump executable not found');
         }
+
         $cmd = "{$mysqlDumpPath} ";
         if ($dbServer = Util::env('DB_SERVER')) {
             $cmd .= "-h {$dbServer} ";
@@ -35,6 +36,14 @@ class LocalCommands
         }
         if ($dbDatabase = Util::env('DB_DATABASE')) {
             $cmd .= "{$dbDatabase} ";
+        }
+
+        if ($settings->ignordTables) {
+            $logger = SyncDb::$instance->getLogger();
+            foreach ($settings->ignordTables as $tableName) {
+                $logger->debug('Adding ignored table: $tableName');
+                $cmd .= "--ignore-table={$tableName} ";
+            }
         }
 
         if ($dumpPath = $settings->sqlDumpPath()) {

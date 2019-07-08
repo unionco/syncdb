@@ -38,6 +38,9 @@ class Settings
 
     /** @var int */
     public $verbosity = Output::VERBOSITY_VERBOSE;
+    
+    /** @var string[] */
+    public $ignordTables = [];
 
     public function valid(): bool
     {
@@ -71,6 +74,7 @@ class Settings
         $settings->sqlDumpFileTarball = $opts['sqlDumpFileTarball'] ?? $settings->sqlDumpFileName . '.tar.gz';
         $settings->remoteDumpCommand = $opts['remoteDumpCommand'] ?? '';
         $settings->verbosity = $opts['verbosity'] ?? Output::VERBOSITY_VERBOSE;
+        $settings->ignordTables = $opts['ignoredTables'] ?? [];
         $settings->parseEnvironments($opts['environments'] ?? []);
 
         return $settings;
