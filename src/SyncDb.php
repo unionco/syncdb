@@ -159,20 +159,20 @@ class SyncDb
         $this->_running = true;
         $this->checkLogger($settings);
 
-        $logger->notice("Starting database sync");
+        $this->_logger->notice("Starting database sync");
 
         foreach ($steps as $step) {
             try {
-                Util::exec($step, $logger);
+                Util::exec($step, $this->_logger);
             } catch (\Exception $e) {
                 $this->_running = false;
-                $logger->logOutput(print_r($e->getMessage(), true));
+                $this->_logger->logOutput(print_r($e->getMessage(), true));
             }
         }
         $this->_running = false;
         $this->_success = true;
 
-        $logger->notice("Database sync complete");
+        $this->_logger->notice("Database sync complete");
 
         return true;
     }
