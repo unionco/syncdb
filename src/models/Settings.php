@@ -40,7 +40,7 @@ class Settings
     public $verbosity = Output::VERBOSITY_VERBOSE;
     
     /** @var string[] */
-    public $ignordTables = [];
+    public $ignoredTables = [];
 
     public function valid(): bool
     {
@@ -64,7 +64,7 @@ class Settings
     public static function parse(array $opts): Settings
     {
         $settings = new Settings();
-
+        // var_dump($opts); die;
         $settings->mysqlClientPath = $opts['mysqlClientPath'] ?? '';
         $settings->mysqlDumpPath = $opts['mysqlDumpPath'] ?? '';
         $settings->storagePath = $opts['storagePath'] ?? '';
@@ -74,9 +74,10 @@ class Settings
         $settings->sqlDumpFileTarball = $opts['sqlDumpFileTarball'] ?? $settings->sqlDumpFileName . '.tar.gz';
         $settings->remoteDumpCommand = $opts['remoteDumpCommand'] ?? '';
         $settings->verbosity = $opts['verbosity'] ?? Output::VERBOSITY_VERBOSE;
-        $settings->ignordTables = $opts['ignoredTables'] ?? [];
+        // $settings->ignoredTables = $opts['ignoredTables'] ?? [];
+        $settings->parseGlobals($opts['environments'] ?? []);
         $settings->parseEnvironments($opts['environments'] ?? []);
-
+// var_dump($settings); die;
         return $settings;
     }
 
@@ -97,6 +98,20 @@ class Settings
             $env->readConfig($values);
 
             $this->environments[$name] = $env;
+        }
+    }
+
+    private function parseGlobals($environments)
+    {
+        if (is_string($environments)) {
+            /** @psalm-suppress UnresolvableInclude */
+            $globals = (require $environments)['globals'];
+        } else {
+            return;
+        }
+
+        foreach ($globals as $name => $values) {
+            $this->{$name} = $values;
         }
     }
 

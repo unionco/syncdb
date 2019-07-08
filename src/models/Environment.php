@@ -2,8 +2,8 @@
 
 namespace unionco\syncdb\models;
 
-use unionco\syncdb\SyncDb;
 use Symfony\Component\Console\Output\Output;
+use unionco\syncdb\SyncDb;
 
 class Environment
 {
@@ -11,9 +11,8 @@ class Environment
     const ENV_STAGING = 'staging';
     const ENV_PRODUCTION = 'production';
 
-    
     public $environment;
-    
+
     /** @var string */
     private $_error = '';
 
@@ -38,6 +37,7 @@ class Environment
     /** @var string */
     public $backupDirectory = '';
 
+    /** @var int */
     public $verbosity = Output::VERBOSITY_NORMAL;
 
     /** @var array<string> */
@@ -81,7 +81,7 @@ class Environment
         if (key_exists('backupDirectory', $config)) {
             $this->setBackupDirectory($config['backupDirectory']);
         }
-        
+
         if (key_exists('environment', $config)) {
             $this->setEnvironment($config['environment']);
         }
@@ -214,7 +214,7 @@ class Environment
     {
         /** @var Settings */
         $settings = SyncDb::$instance->getSettings();
-        
+
         /** @var string */
         $dumpMysqlCommand = $this->root . '/' . $settings->remoteDumpCommand;
         $cmd = $this->getSshCommand();

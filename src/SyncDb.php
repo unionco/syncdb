@@ -27,6 +27,7 @@ class SyncDb
     private $_success = false;
 
     private $_logger;
+    private $_verbosityLevel;
 
     /**
      * @param array $opts
@@ -37,12 +38,43 @@ class SyncDb
         $this->settings = Settings::parse($opts);
     }
 
+    private function checkLogger($settings)
+    {
+        if ($this->_logger === null) {
+            // var_dump($settings); die;
+            if (!$this->_verbosityLevel) {
+                $this->_verbosityLevel = $settings->verbosity ?? Output::VERBOSITY_QUIET;
+            }
+            echo "Using verbosityLevel : $this->_verbosityLevel \n";
+            $output = new ConsoleOutput($this->_verbosityLevel, true);
+            $this->_logger = new ConsoleLogger(
+                $output,
+                [
+                    LogLevel::INFO => Output::VERBOSITY_NORMAL,
+                    LogLevel::NOTICE => Output::VERBOSITY_NORMAL,
+                    LogLevel::DEBUG => Output::VERBOSITY_VERBOSE,
+                    LogLevel::ERROR => Output::VERBOSITY_NORMAL,
+                ]
+            );
+        }
+    }
+
     /**
      * @param LoggerInterface $logger
      * @return bool
      */
-    public function dump(LoggerInterface $logger = null)
+    public function dump(LoggerInterface $logger = null, ?int $verbosityLevel = null)
     {
+        $this->_logger = $logger;
+        $this->_verbosityLevel = $verbosityLevel;
+        $settings = static::$instance->getSettings();
+        if (!$settings->valid()) {
+            throw new \Exception('Settings are invalid');
+            die;
+        }
+
+        $this->checkLogger($settings);
+
         Util::checkBackupPath();
 
         $steps = [
@@ -60,13 +92,13 @@ class SyncDb
             ]),
         ];
 
-        if ($logger === null) {
-            $output = new ConsoleOutput();
-            $logger = new ConsoleLogger($output);
-        }
+        // if ($logger === null) {
+        //     $output = new ConsoleOutput();
+        //     $logger = new ConsoleLogger($output);
+        // }
 
         foreach ($steps as $step) {
-            Util::exec($step, $logger);
+            Util::exec($step, $this->_logger);
         }
 
         return true;
@@ -84,6 +116,7 @@ class SyncDb
         $settings = static::$instance->getSettings();
 
         if (!$settings->valid()) {
+            throw new \Exception('Settings are invalid');
             die();
         }
 
@@ -124,23 +157,7 @@ class SyncDb
         ];
 
         $this->_running = true;
-        if ($logger === null) {
-            // var_dump($settings); die;
-            if (!$verbosityLevel) {
-                $verbosityLevel = $settings->verbosity ?? Output::VERBOSITY_QUIET;
-            }
-            echo "Using verbosityLevel : $verbosityLevel \n";
-            $output = new ConsoleOutput($verbosityLevel, true);
-            $logger = new ConsoleLogger(
-                $output,
-                [
-                    LogLevel::INFO => Output::VERBOSITY_NORMAL,
-                    LogLevel::NOTICE => Output::VERBOSITY_NORMAL,
-                    LogLevel::DEBUG => Output::VERBOSITY_VERBOSE,
-                    LogLevel::ERROR => Output::VERBOSITY_NORMAL,
-                ]
-            );
-        }
+        $this->checkLogger($settings);
 
         $logger->notice("Starting database sync");
 
