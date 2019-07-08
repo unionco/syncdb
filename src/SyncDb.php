@@ -127,7 +127,7 @@ class SyncDb
         $steps = [
             new Command([
                 'timing' => 'remote dump',
-                'cmd' => $remote->getRemoteDumpCommand(),
+                'cmd' => $remote->getRemoteDumpCommand($verbosityLevel),
             ]),
             new Command([
                 'timing' => 'remote download',

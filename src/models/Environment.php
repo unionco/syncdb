@@ -210,13 +210,13 @@ class Environment
     /**
      * @return string
      */
-    public function getRemoteDumpCommand(): string
+    public function getRemoteDumpCommand(?string $verbosityLevel = 'normal'): string
     {
         /** @var Settings */
         $settings = SyncDb::$instance->getSettings();
 
         /** @var string */
-        $dumpMysqlCommand = $this->root . '/' . $settings->remoteDumpCommand;
+        $dumpMysqlCommand = $this->root . '/' . $settings->remoteDumpCommand . " " . ($verbosityLevel ?? '');
         $cmd = $this->getSshCommand();
         $cmd .= " \"{$this->phpPath} {$dumpMysqlCommand}\"";
 
