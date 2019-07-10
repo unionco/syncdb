@@ -2,21 +2,28 @@
 
 namespace unionco\syncdb;
 
+use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
 use unionco\syncdb\util\Util;
 use unionco\syncdb\util\Command;
 use unionco\syncdb\LocalCommands;
 use unionco\syncdb\models\Settings;
+use unionco\syncdb\models\MysqlSettings;
+use unionco\syncdb\models\PgsqlSettings;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Formatter\OutputFormatter;
-use Psr\Log\LogLevel;
 
 class SyncDb
 {
+    const DRIVER_MYSQL = 'mysql';
+    const DRIVER_PGSQL = 'pgsql';
+
     /** @var SyncDb $instance */
     public static $instance;
+
+    public $driver = self::DRIVER_MYSQL;
 
     /** @var Settings */
     private $settings;
@@ -35,7 +42,25 @@ class SyncDb
     public function __construct($opts = [])
     {
         static::$instance = $this;
-        $this->settings = Settings::parse($opts);
+        
+        $driver = $opts['driver'] ?? getenv('DB_DRIVER') ?? false;
+        
+        if (!$driver) {
+            throw new \Exception('Database driver must be set. Supported options are mysql and pgsql');
+        }
+        $settings = null;
+        switch ($driver) {
+            case self::DRIVER_MYSQL:
+                $settings = new MysqlSettings();
+                break;
+            case self::DRIVER_PGSQL:
+                $settings = new PgsqlSettings();
+                break;
+            default:
+                throw new \Exception('Unsupported driver');
+        }
+        $this->driver = $driver;
+        $this->settings = Settings::parse($opts, $settings);
     }
 
     private function checkLogger($settings)
@@ -45,7 +70,7 @@ class SyncDb
             if (!$this->_verbosityLevel) {
                 $this->_verbosityLevel = $settings->verbosity ?? Output::VERBOSITY_QUIET;
             }
-            echo "Using verbosityLevel : $this->_verbosityLevel \n";
+            // echo "Using verbosityLevel : $this->_verbosityLevel \n";
             $output = new ConsoleOutput($this->_verbosityLevel, true);
             $this->_logger = new ConsoleLogger(
                 $output,
@@ -63,7 +88,7 @@ class SyncDb
      * @param LoggerInterface $logger
      * @return bool
      */
-    public function dump(LoggerInterface $logger = null, ?int $verbosityLevel = null)
+    public function dump(LoggerInterface $logger = null, ?int $verbosityLevel = null, bool $remote = false)
     {
         $this->_logger = $logger;
         $this->_verbosityLevel = $verbosityLevel;
@@ -79,26 +104,24 @@ class SyncDb
 
         $steps = [
             new Command([
-                'timing' => 'mysqldump',
-                'cmd' => LocalCommands::mysqlDumpCommand(),
+                'name' => 'database dump',
+                'timed' => true,
+                'cmd' => LocalCommands::dumpCommand($this->driver),
             ]),
             new Command([
-                'log' => 'Creating tarball archive',
+                'name' => 'create tarball archive',
+                'timed' => true,
                 'cmd' => LocalCommands::tarCommand(),
             ]),
             new Command([
-                'log' => 'Removing temporary files',
+                'name' => 'remove temporary files',
+                'timed' => false,
                 'cmd' => LocalCommands::rmCommand(),
             ]),
         ];
 
-        // if ($logger === null) {
-        //     $output = new ConsoleOutput();
-        //     $logger = new ConsoleLogger($output);
-        // }
-
         foreach ($steps as $step) {
-            Util::exec($step, $this->_logger);
+            Util::exec($step, $this->_logger, $remote);
         }
 
         return true;
@@ -126,32 +149,39 @@ class SyncDb
 
         $steps = [
             new Command([
-                'timing' => 'remote dump',
+                'name' => 'remote dump',
+                'timed' => true,
                 'cmd' => $remote->getRemoteDumpCommand($verbosityLevel),
             ]),
             new Command([
-                'timing' => 'remote download',
+                'name' => 'remote download',
+                'timed' => true,
                 'cmd' => $remote->getRemoteDownloadCommand(
                     $settings->sqlDumpFileTarball,
                     $settings->sqlDumpPath(true, $settings->sqlDumpFileTarball)
                 ),
             ]),
             new Command([
+                'name' => 'delete remote file',
+                'timed' => false,
                 'cmd' => $remote->getRemoteDeleteCommand($settings->sqlDumpFileTarball),
-                'log' => 'Remote file deleted',
             ]),
             new Command([
+                'name' => 'extract archive',
+                'timed' => true,
                 'cmd' => LocalCommands::extractCommand(),
-                'log' => 'Tarball extracted',
             ]),
             new Command([
+                'name' => 'import sql',
+                'timed' => true,
                 'cmd' => LocalCommands::importCommand(),
-                'log' => 'Local dump complete',
             ]),
             new Command([
+                'name' => 'remove local sql file',
                 'cmd' => 'rm ' . $settings->sqlDumpPath(true, $settings->sqlDumpFileName),
             ]),
             new Command([
+                'name' => 'remove local archive',
                 'cmd' => 'rm ' . $settings->sqlDumpPath(true, $settings->sqlDumpFileTarball),
             ]),
         ];

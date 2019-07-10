@@ -116,7 +116,7 @@ class Util
      * @param LoggerInterface $logger
      * @return void
      */
-    public static function exec(Command $command, LoggerInterface $logger = null)
+    public static function exec(Command $command, LoggerInterface $logger, bool $remote = false)
     {
         /** @var bool */
         $silent = true;
@@ -136,11 +136,10 @@ class Util
         /** @var string */
         $scrubbed = $command->getScrubbedCommand();
 
-        /** @var string */
-        $timing = $command->getTiming();
+        $name = $command->getName();
 
         /** @var bool */
-        $log = $command->getLogging();
+        $timed = $command->getTimed();
 
         /** @var float */
         $startTime = 0.0;
@@ -148,8 +147,15 @@ class Util
         /** @var float */
         $endTime = 0.0;
 
-        if ($timing && $logger) {
-            $logger->info("Beginning {$timing}");
+        /**
+         * Show a prefix of '[REMOTE]' if this command is run on the remote server
+         * @var string $prefix
+         */
+        $prefix = $remote ? '[REMOTE] ' : '';
+
+        $logger->info("Beginning {$name}");
+        
+        if ($timed) {
             $startTime = microtime(true);
         }
 
@@ -157,24 +163,24 @@ class Util
             $cmd = $cmd . " 2>&1";
         }
         if ($logger) {
-            $logger->debug($scrubbed);
+            $logger->debug($prefix . $scrubbed);
         }
 
         exec($cmd, $output, $returnVar);
 
         foreach ($output as $line) {
             if ($logger) {
-                $logger->debug($line);
+                $logger->debug($prefix . $line);
             }
         }
 
         if ($returnVar != 0) {
             if ($logger) {
-                $logger->error("return non-zero: {$returnVar}");
-                $logger->error("Failed on command: {$scrubbed}");
+                $logger->error($prefix . "return non-zero: {$returnVar}");
+                $logger->error($prefix . "Failed on command: {$scrubbed}");
             
                 foreach ($output as $line) {
-                    $logger->error($line);
+                    $logger->error($prefix . $line);
                 }
             }
             if ($failOnError) {
@@ -182,15 +188,10 @@ class Util
             }
         }
 
-        if ($timing && $logger) {
+        if ($timed) {
             $endTime = microtime(true);
             $diffTime = number_format(($endTime - $startTime), 2);
-            $logger->info("Task {$timing} completed in {$diffTime} seconds");
+            $logger->debug($prefix . "Task {$name} completed in {$diffTime} seconds");
         }
-
-        if ($log && $logger) {
-            $log->info($log);
-        }
-        //sleep(1);
     }
 }

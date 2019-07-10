@@ -7,11 +7,11 @@ class Command
     /** @var string */
     protected $cmd = '';
 
-    /** @var false|string */
-    protected $timing = false;
+    /** @var bool */
+    protected $timed = false;
 
-    /** @var false|string */
-    protected $logging = false;
+    /** @var string */
+    protected $name = '';
 
     /**
      * @param array $opts
@@ -19,8 +19,8 @@ class Command
     public function __construct($opts = [])
     {
         $this->cmd = $opts['cmd'] ?? '';
-        $this->logging = $opts['logging'] ?? false;
-        $this->timing = $opts['timing'] ?? false;
+        $this->timed = $opts['timed'] ?? false;
+        $this->name = $opts['name'] ?? '';
     }
 
     public function getCommand(): string
@@ -37,13 +37,18 @@ class Command
         return $scrubbed;
     }
 
-    public function getTiming(): string
+    public function getTimed(): bool
     {
-        return $this->timing;
+        return $this->timed;
     }
 
     public function getLogging(): string
     {
         return $this->logging;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }
