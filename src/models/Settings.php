@@ -111,8 +111,6 @@ abstract class Settings
         }
     }
 
-    
-
     public function sqlDumpPath(bool $file = true, string $fileName = ''): string
     {
         if ($file && !$fileName) {
@@ -124,7 +122,7 @@ abstract class Settings
         }
     }
 
-        /**
+    /**
      * @return false|string
      */
     public function getDbClientPath()
