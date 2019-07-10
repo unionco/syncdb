@@ -216,9 +216,9 @@ class Environment
         $settings = SyncDb::$instance->getSettings();
 
         /** @var string */
-        $dumpMysqlCommand = $this->root . '/' . $settings->remoteDumpCommand . " " . ($verbosityLevel ?? '');
+        $dumpCommand = $this->root . '/' . $settings->remoteDumpCommand . " " . ($verbosityLevel ?? '');
         $cmd = $this->getSshCommand();
-        $cmd .= " \"{$this->phpPath} {$dumpMysqlCommand}\"";
+        $cmd .= " \"{$this->phpPath} {$dumpCommand} 1\"";
 
         return $cmd;
     }

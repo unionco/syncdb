@@ -96,6 +96,8 @@ class LocalCommands
             $cmd .= "{$dbDatabase} ";
         }
 
+        $cmd .= " --no-acl --if-exists --clean --no-owner --no-privileges";
+
         if ($dumpPath = $settings->sqlDumpPath()) {
             $cmd .= " > {$dumpPath}";
         }
@@ -106,7 +108,18 @@ class LocalCommands
     /**
      * @return string
      */
-    public static function importCommand(): string
+    public static function importCommand(string $driver): string
+    {
+        switch ($driver) {
+            case SyncDb::DRIVER_MYSQL:
+                return static::mysqlImportCommand();
+            case SyncDb::DRIVER_PGSQL:
+                return static::pgsqlImportCommand();
+        }
+        
+    }
+
+    protected static function mysqlImportCommand(): string
     {
         /** @var \unionco\syncdb\models\Settings */
         $settings = SyncDb::$instance->getSettings();
@@ -125,6 +138,37 @@ class LocalCommands
         }
         if ($dbPassword = Util::env('DB_PASSWORD')) {
             $cmd .= "--password=\"{$dbPassword}\" ";
+        }
+        if ($dbDatabase = Util::env('DB_DATABASE')) {
+            $cmd .= "{$dbDatabase} ";
+        }
+
+        if ($dumpPath = $settings->sqlDumpPath()) {
+            $cmd .= " < {$dumpPath}";
+        }
+
+        return $cmd;
+    }
+
+    protected static function pgsqlImportCommand(): string
+    {
+        /** @var \unionco\syncdb\models\Settings */
+        $settings = SyncDb::$instance->getSettings();
+
+        /** @var string */
+        $cmd = "psql ";
+
+        if ($dbServer = Util::env('DB_SERVER')) {
+            $cmd .= "-h {$dbServer} ";
+        }
+        if ($dbPort = Util::env('DB_PORT')) {
+            $cmd .= "-p {$dbPort} ";
+        }
+        if ($dbUser = Util::env('DB_USER')) {
+            $cmd .= "-U {$dbUser} ";
+        }
+        if ($dbPassword = Util::env('DB_PASSWORD')) {
+            $cmd = "/usr/bin/env PG_PASSWORD=\"{$dbPassword}\" {$cmd}";
         }
         if ($dbDatabase = Util::env('DB_DATABASE')) {
             $cmd .= "{$dbDatabase} ";

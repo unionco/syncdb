@@ -174,7 +174,7 @@ class SyncDb
             new Command([
                 'name' => 'import sql',
                 'timed' => true,
-                'cmd' => LocalCommands::importCommand(),
+                'cmd' => LocalCommands::importCommand($this->driver),
             ]),
             new Command([
                 'name' => 'remove local sql file',
