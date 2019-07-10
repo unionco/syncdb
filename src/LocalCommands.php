@@ -45,7 +45,7 @@ class LocalCommands
             $cmd .= "-u {$dbUser} ";
         }
         if ($dbPassword = Util::env('DB_PASSWORD')) {
-            $cmd .= "--password=\"{$dbPassword}\" ";
+            $cmd = "/usr/bin/env PG_PASSWORD=\"{$dbPassword}\" {$cmd}";
         }
         if ($dbDatabase = Util::env('DB_DATABASE')) {
             $cmd .= "{$dbDatabase} ";
