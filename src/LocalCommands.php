@@ -116,7 +116,6 @@ class LocalCommands
             case SyncDb::DRIVER_PGSQL:
                 return static::pgsqlImportCommand();
         }
-        
     }
 
     protected static function mysqlImportCommand(): string
