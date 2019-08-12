@@ -14,7 +14,7 @@ abstract class Settings
     public static $defaultClientPaths = [];
     public static $defaultDumpClientPaths = [];
 
-    /** @var array<Environment> */
+    /** @var Environment[] */
     public $environments = [];
 
     /** @var string */
@@ -168,6 +168,29 @@ abstract class Settings
             }
         }
 
+        return false;
+    }
+
+    /**
+     * @param string $environmentName
+     * @return false|Environment
+     */
+    public function getEnvironment($environmentName)
+    {
+        $matches = array_filter(
+            $this->environments,
+            /**
+             * @param Environment $env
+             * @return bool
+             */
+            function ($env) use ($environmentName) {
+                return $env->name === $environmentName;
+            }
+        );
+
+        if ($matches) {
+            return array_pop($matches);
+        }
         return false;
     }
 }

@@ -145,8 +145,13 @@ class SyncDb
 
         Util::checkBackupPath();
 
-        $remote = $settings->environments[$environment];
+        // $remote = $settings->environments[$environment];
+        $remote = $settings->getEnvironment($environment);
 
+        if (!$remote) {
+            throw new \Exception('Environment not found: ' . $environment);
+        }
+        
         $steps = [
             new Command([
                 'name' => 'remote dump',
