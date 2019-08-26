@@ -39,7 +39,7 @@ abstract class Settings
     public $verbosity = Output::VERBOSITY_VERBOSE;
     
     /** @var string[] */
-    public $ignoredTables = [];
+    public $skipTables = [];
 
     /** @var string */
     public $dbClientPath = '';

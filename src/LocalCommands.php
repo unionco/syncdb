@@ -51,9 +51,9 @@ class LocalCommands
             $cmd .= "{$dbDatabase} ";
         }
 
-        if ($settings->ignoredTables) {
+        if ($settings->skipTables {
             $logger = SyncDb::$instance->getLogger();
-            foreach ($settings->ignoredTables as $tableName) {
+            foreach ($settings->skipTables as $tableName) {
                 $name = "{$dbDatabase}.{$tableName}";
                 $logger->debug("Adding ignored table: {$name}");
                 $cmd .= "--ignore-table={$name} ";
