@@ -51,7 +51,7 @@ class LocalCommands
             $cmd .= "{$dbDatabase} ";
         }
 
-        if ($settings->skipTables {
+        if ($settings->skipTables) {
             $logger = SyncDb::$instance->getLogger();
             foreach ($settings->skipTables as $tableName) {
                 $name = "{$dbDatabase}.{$tableName}";
