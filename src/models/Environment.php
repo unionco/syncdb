@@ -145,7 +145,10 @@ class Environment
         $this->root = $root;
     }
 
-    public function setEnvironment(string $environment): void
+    /**
+     * @return void
+     */
+    public function setEnvironment(string $environment)
     {
         $this->environment = $environment;
     }
@@ -208,15 +211,20 @@ class Environment
     }
 
     /**
+     * @param null|string $verbosityLevel
      * @return string
      */
-    public function getRemoteDumpCommand(?string $verbosityLevel = 'normal'): string
+    public function getRemoteDumpCommand($verbosityLevel = 'normal'): string
     {
+        if (!$verbosityLevel) {
+            $verbosityLevel = 'normal';
+        }
+
         /** @var Settings */
         $settings = SyncDb::$instance->getSettings();
 
         /** @var string */
-        $dumpCommand = $this->root . '/' . $settings->remoteDumpCommand . " " . ($verbosityLevel ?? '');
+        $dumpCommand = $this->root . '/' . $settings->remoteDumpCommand . " " . $verbosityLevel;
         $cmd = $this->getSshCommand();
         $cmd .= " \"{$this->phpPath} {$dumpCommand} 1\"";
 
