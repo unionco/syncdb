@@ -99,7 +99,7 @@ class LocalCommands
         $cmd .= " --no-acl --if-exists --clean --no-owner --no-privileges";
 
         if ($dumpPath = $settings->sqlDumpPath()) {
-            $cmd .= " > {$dumpPath}";
+            $cmd .= " 1> {$dumpPath}";
         }
 
         return $cmd;
