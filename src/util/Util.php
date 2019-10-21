@@ -19,7 +19,8 @@ class Util
         $baseDir = SyncDb::$instance->getSettings()->baseDir;
         if ($baseDir) {
             if (!static::$loaded) {
-                (new Dotenv($baseDir))->load();
+                $dotenv = Dotenv::create($baseDir);
+                $dotenv->load();
                 static::$loaded = true;
             }
         }
