@@ -61,7 +61,7 @@ class LocalCommands
         }
 
         if ($dumpPath = $settings->sqlDumpPath()) {
-            $cmd .= " > {$dumpPath}";
+            $cmd .= " 1> {$dumpPath}";
         }
 
         return $cmd;
