@@ -34,7 +34,11 @@ class LocalCommands
             throw new \Exception('mysqldump executable not found');
         }
 
-        $cmd = "{$mysqlDumpPath} ";
+        if ($dbPassword = Util::env('DB_PASSWORD')) {
+            $cmd = "MYSQL_PWD=\"{$dbPassword}\" ";
+        }
+
+        $cmd .= " {$mysqlDumpPath} ";
         if ($dbServer = Util::env('DB_SERVER')) {
             $cmd .= "-h {$dbServer} ";
         }
@@ -44,9 +48,7 @@ class LocalCommands
         if ($dbUser = Util::env('DB_USER')) {
             $cmd .= "-u {$dbUser} ";
         }
-        if ($dbPassword = Util::env('DB_PASSWORD')) {
-            $cmd .= "--password=\"{$dbPassword}\" ";
-        }
+        
         if ($dbDatabase = Util::env('DB_DATABASE')) {
             $cmd .= "{$dbDatabase} ";
         }

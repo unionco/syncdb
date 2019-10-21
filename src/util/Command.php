@@ -33,6 +33,7 @@ class Command
         $cmd = $this->getCommand();
         // Remove passwords from mysql/mysqldump commands
         $scrubbed = preg_replace('/\-\-password=".*"/', '--password="*****"', $cmd);
+        $scrubeed = preg_replace('/MYSQL_PWD=".*"/', 'MYSQL_PWD="*****"', $cmd);
 
         return $scrubbed;
     }
