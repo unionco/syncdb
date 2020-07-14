@@ -63,7 +63,7 @@ class LocalCommands
         }
 
         if ($dumpPath = $settings->sqlDumpPath()) {
-            $cmd .= " 2>/dev/null 1> {$dumpPath}";
+            $cmd .= " --set-gtid-purged=OFF 2>/dev/null 1> {$dumpPath}";
         }
 
         return $cmd;
