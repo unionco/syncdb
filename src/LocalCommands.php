@@ -49,6 +49,8 @@ class LocalCommands
             $cmd .= "-u {$dbUser} ";
         }
 
+        $cmd .= " --set-gtid-purged=OFF ";
+
         if ($dbDatabase = Util::env('DB_DATABASE')) {
             $cmd .= "{$dbDatabase} ";
         }
@@ -63,7 +65,7 @@ class LocalCommands
         }
 
         if ($dumpPath = $settings->sqlDumpPath()) {
-            $cmd .= " --set-gtid-purged=OFF 2>/dev/null 1> {$dumpPath}";
+            $cmd .= " 2>/dev/null 1> {$dumpPath}";
         }
 
         return $cmd;
