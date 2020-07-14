@@ -13,28 +13,35 @@ use unionco\syncdb\models\PgsqlSettings;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Formatter\OutputFormatter;
 
 class SyncDb
 {
-    const DRIVER_MYSQL = 'mysql';
-    const DRIVER_PGSQL = 'pgsql';
+    /** @var string */
+    public const DRIVER_MYSQL = 'mysql';
+
+    /** @var string */
+    public const DRIVER_PGSQL = 'pgsql';
 
     /** @var SyncDb $instance */
     public static $instance;
 
+    /** @var 'mysql'|'psql' */
     public $driver = self::DRIVER_MYSQL;
 
     /** @var Settings */
     private $settings;
-    
+
     /** @var bool Indicates if there is a sync active */
-    private $_running = false;
+    private $running = false;
 
-    private $_success = false;
+    /** @var bool */
+    private $success = false;
 
-    private $_logger;
-    private $_verbosityLevel;
+    /** @var LoggerInterface|null */
+    private $logger;
+
+    /** @var int */
+    private $verbosityLevel = Output::VERBOSITY_NORMAL;
 
     /**
      * @param array $opts
@@ -42,11 +49,11 @@ class SyncDb
     public function __construct($opts = [])
     {
         static::$instance = $this;
-        
-        $driver = $opts['driver'] ?? getenv('DB_DRIVER') ?? false;
-        
+
+        $driver = $opts['driver'] ?? getenv('DB_DRIVER');
+
         if (!$driver) {
-            throw new \Exception('Database driver must be set. Supported options are mysql and pgsql');
+            throw new \Exception("Database driver must be set. Supported options are 'mysql' and 'pgsql'");
         }
         $settings = null;
         switch ($driver) {
@@ -63,16 +70,20 @@ class SyncDb
         $this->settings = Settings::parse($opts, $settings);
     }
 
+    /**
+     * Initialize the logger component
+     * @param mixed $settings
+     * @return void
+     */
     private function checkLogger($settings)
     {
-        if ($this->_logger === null) {
-            // var_dump($settings); die;
-            if (!$this->_verbosityLevel) {
-                $this->_verbosityLevel = $settings->verbosity ?? Output::VERBOSITY_QUIET;
+        if ($this->logger === null) {
+            if (!$this->verbosityLevel) {
+                $this->verbosityLevel = $settings->verbosity ?? Output::VERBOSITY_QUIET;
             }
-            // echo "Using verbosityLevel : $this->_verbosityLevel \n";
-            $output = new ConsoleOutput($this->_verbosityLevel, true);
-            $this->_logger = new ConsoleLogger(
+
+            $output = new ConsoleOutput($this->verbosityLevel, true);
+            $this->logger = new ConsoleLogger(
                 $output,
                 [
                     LogLevel::INFO => Output::VERBOSITY_NORMAL,
@@ -90,8 +101,8 @@ class SyncDb
      */
     public function dump(LoggerInterface $logger = null, ?int $verbosityLevel = null, bool $remote = false)
     {
-        $this->_logger = $logger;
-        $this->_verbosityLevel = $verbosityLevel;
+        $this->logger = $logger;
+        $this->verbosityLevel = $verbosityLevel;
         $settings = static::$instance->getSettings();
         if (!$settings->valid()) {
             throw new \Exception('Settings are invalid');
@@ -121,7 +132,7 @@ class SyncDb
         ];
 
         foreach ($steps as $step) {
-            Util::exec($step, $this->_logger, $remote);
+            Util::exec($step, $this->logger, $remote);
         }
 
         return true;
@@ -134,8 +145,8 @@ class SyncDb
      */
     public function sync(LoggerInterface $logger = null, $environment = 'production', bool $background = false, ?int $verbosityLevel = null)
     {
-        $this->_logger = $logger;
-        $this->_success = false;
+        $this->logger = $logger;
+        $this->success = false;
         $settings = static::$instance->getSettings();
 
         if (!$settings->valid()) {
@@ -151,7 +162,7 @@ class SyncDb
         if (!$remote) {
             throw new \Exception('Environment not found: ' . $environment);
         }
-        
+
         $steps = [
             new Command([
                 'name' => 'remote dump',
@@ -191,23 +202,23 @@ class SyncDb
             ]),
         ];
 
-        $this->_running = true;
+        $this->running = true;
         $this->checkLogger($settings);
 
-        $this->_logger->notice("Starting database sync");
+        $this->logger->notice("Starting database sync");
 
         foreach ($steps as $step) {
             try {
-                Util::exec($step, $this->_logger);
+                Util::exec($step, $this->logger);
             } catch (\Exception $e) {
-                $this->_running = false;
-                $this->_logger->logOutput(print_r($e->getMessage(), true));
+                $this->running = false;
+                $this->logger->logOutput(print_r($e->getMessage(), true));
             }
         }
-        $this->_running = false;
-        $this->_success = true;
+        $this->running = false;
+        $this->success = true;
 
-        $this->_logger->notice("Database sync complete");
+        $this->logger->notice("Database sync complete");
 
         return true;
     }
@@ -222,16 +233,16 @@ class SyncDb
 
     public function running(): bool
     {
-        return $this->_running;
+        return $this->running;
     }
 
     public function success(): bool
     {
-        return $this->_success;
+        return $this->success;
     }
 
     public function getLogger(): LoggerInterface
     {
-        return $this->_logger;
+        return $this->logger;
     }
 }

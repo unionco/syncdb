@@ -6,12 +6,12 @@
     "authors": [
         {
             "name": "Abry Rath",
-            "email": "unionco@gmail.com"
+            "email": "abry.rath@union.co"
         }
     ],
     "minimum-stability": "stable",
     "require": {
-        "vlucas/phpdotenv": "^3.4.0",
+        "vlucas/phpdotenv": "^2.4.0",
         "symfony/console": "^4.2||^3.0"
     },
     "autoload": {
