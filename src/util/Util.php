@@ -19,7 +19,12 @@ class Util
         $baseDir = SyncDb::$instance->getSettings()->baseDir;
         if ($baseDir) {
             if (!static::$loaded) {
-                $dotenv = Dotenv::create($baseDir);
+                $dotenv = null;
+                try {
+                    $dotenv = Dotenv::create($baseDir);
+                } catch (\Throwable $e) {
+                    $dotenv = new Dotenv($baseDir);
+                }
                 $dotenv->load();
                 static::$loaded = true;
             }
@@ -81,7 +86,7 @@ class Util
     {
         // /** @var string  */
         // $cmd = "bash -c 'which {$path}'";
-        
+
         // /** @var array */
         // $output = [];
 
@@ -155,7 +160,7 @@ class Util
         $prefix = $remote ? '[REMOTE] ' : '';
 
         $logger->info("Beginning {$name}");
-        
+
         if ($timed) {
             $startTime = microtime(true);
         }
@@ -179,7 +184,7 @@ class Util
             if ($logger) {
                 $logger->error($prefix . "return non-zero: {$returnVar}");
                 $logger->error($prefix . "Failed on command: {$scrubbed}");
-            
+
                 foreach ($output as $line) {
                     $logger->error($prefix . $line);
                 }

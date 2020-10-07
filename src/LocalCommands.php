@@ -49,7 +49,7 @@ class LocalCommands
             $cmd .= "-u {$dbUser} ";
         }
 
-        $cmd .= " --set-gtid-purged=OFF ";
+        // $cmd .= " --set-gtid-purged=OFF ";
 
         if ($dbDatabase = Util::env('DB_DATABASE')) {
             $cmd .= "{$dbDatabase} ";
