@@ -14,14 +14,22 @@
     "prefer-stable": true,
     "require": {
         "vlucas/phpdotenv": "^2.0||^3.0||^4.0",
-        "symfony/console": ">=2.7 <6.0"
+        "symfony/console": "^5.2",
+        "symfony/process": "^5.2",
+        "symfony/validator": "^5.2",
+        "doctrine/annotations": "^1.12",
+        "symfony/config": "^5.2",
+        "symfony/dependency-injection": "^5.2",
+        "symfony/yaml": "^5.2",
+        "symfony/cache": "^5.2",
+        "doctrine/cache": "^1.10"
     },
     "autoload": {
         "psr-4": {
-            "unionco\\syncdb\\": "src/"
+            "App\\": "src/"
         }
     },
     "require-dev": {
-        "vimeo/psalm": "^3.0"
+        "vimeo/psalm": "^4.7"
     }
 }

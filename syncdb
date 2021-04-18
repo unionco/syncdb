@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Console\Application;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+
+require __DIR__ . '/vendor/autoload.php';
+
+define('SYNCDB_CONFIG_PATH', __DIR__ . '/config');
+
+// Create the service container for DI
+$container = new ContainerBuilder();
+
+// Load config/services.yml
+$loader = new YamlFileLoader($container, new FileLocator());
+$loader->load(SYNCDB_CONFIG_PATH . '/services.yml');
+$container->compile();
+
+// Create the app
+$app = new Application();
+// Initialize the service container (need to do this because its not a 'full' symfony app)
+\App\Facade::init($container);
+
+// Add CLI commands
+$app->add(new \App\Command\DumpDatabase());
+// $app->add(new \App\Command\RetrieveDatabaseDump());
+// $app->add(new \App\Command\ImportDatabase());
+
+// Run the app and return its exit code
+exit($app->run());
