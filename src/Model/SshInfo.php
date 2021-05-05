@@ -1,34 +1,63 @@
 <?php
 
-namespace App\Model;
+namespace unionco\syncdb\Model;
 
-use Symfony\Component\Validator\Constraints as Assert;
-
-class SshInfo
+class SshInfo extends ValidationModel
 {
-    /** @var string|null */
-    protected $user;
-    /** @var string|null */
-    protected $host;
-    /** @var string|null */
-    protected $port;
-    /** @var string|null */
-    protected $identity;
+    /**
+     * @var string|null
+     **/
+    protected $user = '';
 
-    /** @var string[] */
-    protected $errors = [];
+    /**
+     * @var string|null
+     **/
+    protected $host = '';
 
-    /** @var string[] */
-    protected $warnings = [];
+    /**
+     * @var string|null
+     **/
+    protected $port = '';
+
+    /**
+     * @var string|null
+     **/
+    protected $identity = '';
+
+    /**
+     * @var string|null $manualPrefix Let the user specify a string, e.g. `ssh user@host -p 2222 -i ~/.ssh/my_key`
+     */
+    protected $manualPrefix = '';
+
+    public static function fromSshString(string $command)
+    {
+        $model = new SshInfo();
+        $model->manualPrefix = $command;
+        return $model;
+    }
+
+    public static function fromConfig(array $opts)
+    {
+        if ($manualPrefix = $opts['manualPrefix'] ?? false) {
+            return static::fromSshString($manualPrefix);
+        }
+        $model = new SshInfo();
+        $model->setHost($opts['host'] ?? '');
+        $model->setUser($opts['user'] ?? '');
+        $model->setPort($opts['port'] ?? '');
+        $model->setIdentity($opts['identity'] ?? '');
+
+        if (!$model->valid()) {
+            throw new \Exception($model->getErrorsString());
+        }
+
+        return $model;
+    }
 
     public function getCommandPrefix(): string
     {
-        if (!$this->valid()) {
-            $output = "Configuration is invalid: " . print_r([
-                'warnings' => $this->getWarnings(),
-                'errors' => $this->getErrors(),
-            ], true);
-            throw new \Exception($output);
+        if ($this->manualPrefix) {
+            return $this->manualPrefix;
         }
 
         $u = $this->getUser();
@@ -38,22 +67,50 @@ class SshInfo
 
         $cmd = 'ssh ';
         if ($u) {
-            $cmd .= "{$u}@{$h}";
+            $cmd .= "{$u}@{$h} ";
         }
         if ($p) {
-            $cmd .= ":{$p}";
+            $cmd .= "-p {$p}";
         }
         if ($i) {
             $cmd .= " -i {$i}";
         }
-        $cmd .= " -- ";
+        // $cmd .= " -- ";
         return $cmd;
+    }
+
+    public function getScpCommand($remote, $local)
+    {
+        $u = $this->getUser();
+        $h = $this->getHost();
+        $p = $this->getPort();
+        $i = $this->getIdentity();
+
+        $cmd = 'scp ';
+        if ($p) {
+            $cmd .= "-P {$p} ";
+        }
+        if ($i) {
+            $cmd .= "-i {$i}";
+        }
+        if ($u) {
+            $cmd .= "{$u}@{$h}:{$remote}";
+        } else {
+            $cmd .= "{$h}:{$remote}";
+        }
+        return $cmd . " $local";
     }
 
     public function valid(): bool
     {
         $errors = [];
         $warnings = [];
+        // var_dump($this->manualPrefix); die;
+        if ($this->manualPrefix) {
+            $this->warnings[] = 'Using manual command prefix - other attributes are ignored';
+            return true;
+        }
+
         if (!$this->host) {
             $errors[] = 'Host cannot be empty!';
         }
@@ -62,7 +119,7 @@ class SshInfo
         }
         if (!$this->port) {
             $warnings[] = 'Port is empty. Assuming default port (22) or defined in an SSH Config file.';
-            $this->port = 22;
+            $this->port = '22';
         }
         if (!$this->identity) {
             $warnings[] = 'Identity file is empty. Assuming the host is defined in an SSH Config file.';
@@ -155,21 +212,5 @@ class SshInfo
         $this->identity = $identity;
 
         return $this;
-    }
-
-    /**
-     * Get the value of errors
-     */
-    public function getErrors()
-    {
-        return $this->errors;
-    }
-
-    /**
-     * Get the value of warnings
-     */
-    public function getWarnings()
-    {
-        return $this->warnings;
     }
 }

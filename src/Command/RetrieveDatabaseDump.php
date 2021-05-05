@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command;
+namespace unionco\syncdbCommand;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

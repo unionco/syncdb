@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Model;
+namespace unionco\syncdbModel;
 
 use Symfony\Component\Process\Process;
 
