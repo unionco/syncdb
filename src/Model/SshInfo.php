@@ -91,12 +91,12 @@ class SshInfo extends ValidationModel
             $cmd .= "-P {$p} ";
         }
         if ($i) {
-            $cmd .= "-i {$i}";
+            $cmd .= "-i {$i} ";
         }
         if ($u) {
-            $cmd .= "{$u}@{$h}:{$remote}";
+            $cmd .= "{$u}@{$h}:{$remote} ";
         } else {
-            $cmd .= "{$h}:{$remote}";
+            $cmd .= "{$h}:{$remote} ";
         }
         return $cmd . " $local";
     }

@@ -1,26 +1,30 @@
 {
-    "common": {
-        "remoteWorkingDir": "/var/www/current/cms",
-        "ignoreTables": [
-            "union_log",
-            "craft_templatecaches",
-            "craft_templatecachequeries",
-            "craft_templatecacheelements",
-            "craft_sessions",
-            "craft_phpsessions",
-            "craft_retour_stats",
-            "craft_cache"
-        ],
-        "readDbConfigFromDotEnv": true,
-        "driver": "mysql"
-    },
-    "staging": {
-        "manualPrefix": "ssh ubuntu@staging.nationalgypsum.com -i ~/.ssh/keys/ngc.pem --"
-    },
-    "production": {
-        "user": "ubuntu",
-        "host": "vps1.nationalgypsum.com",
-        "identity": "~/.ssh/keys/ngc.pem",
-        "port": 22
-    }
+  "common": {
+    "remoteWorkingDir": "/var/www/current/cms",
+    "ignoreTables": [
+      "union_log",
+      "craft_templatecaches",
+      "craft_templatecachequeries",
+      "craft_templatecacheelements",
+      "craft_sessions",
+      "craft_phpsessions",
+      "craft_retour_stats",
+      "craft_cache"
+    ],
+    "readDbConfigFromDotEnv": true,
+    "driver": "mysql"
+  },
+  "aws": {
+    "user": "ubuntu",
+    "identity": "~/.ssh/keys/ngc.pem",
+    "port": 22
+  },
+  "staging": {
+    "extends": "aws",
+    "host": "staging.nationalgypsum.com"
+  },
+  "production": {
+    "extends": "aws",
+    "host": "vps1.nationalgypsum.com"
+  }
 }

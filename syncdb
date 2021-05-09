@@ -5,6 +5,7 @@ use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Service\Config;
 use unionco\syncdb\Model\DatabaseInfo;
+use unionco\syncdb\Service\DatabaseSync;
 
 // use Symfony\Component\Config\FileLocator;
 // use Symfony\Component\Console\Application;
@@ -36,9 +37,9 @@ define('SYNCDB_CONFIG_PATH', __DIR__ . '/config.json');
 // exit($app->run());
 
 $s = new SyncDb();
-$config = Config::parseConfig(SYNCDB_CONFIG_PATH, 'production');
+$config = Config::parseConfig(SYNCDB_CONFIG_PATH, 'staging');
 // var_dump($config); die;
 $ssh = SshInfo::fromConfig($config);
 // var_dump($ssh); die;
 $db = DatabaseInfo::fromConfig($config, $ssh);
-$s->service->dumpDatabase($ssh, $db);
+SyncDb::$container->get(DatabaseSync::class)->dumpDatabase($ssh, $db);

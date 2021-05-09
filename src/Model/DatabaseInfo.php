@@ -2,6 +2,7 @@
 
 namespace unionco\syncdb\Model;
 
+use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Service\DatabaseSync;
@@ -58,7 +59,7 @@ class DatabaseInfo extends ValidationModel
         $remoteWorkingDir = $config['remoteWorkingDir'];
         $cmd = new SetupStep('Get DB Config', ["cd {$remoteWorkingDir}; grep .env -e \"DB_\""]);
         // var_dump($cmd);
-        $result = DatabaseSync::runRemote($ssh, $cmd);
+        $result = SyncDb::$container->get(DatabaseSync::class)->runRemote($ssh, $cmd);
 
         // var_dump($result);
         // If successful, the result will look like:

@@ -2,9 +2,11 @@
 
 namespace unionco\syncdb\Model;
 
+use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\ScenarioStep;
 use unionco\syncdb\Model\TeardownStep;
+use unionco\syncdb\Service\DatabaseSync;
 
 class Scenario
 {
@@ -141,5 +143,96 @@ class Scenario
             $output .= "\t{$teardownStep->id} -> {$teardownStep->relatedId}|\t{$teardownStep->getName()}\t{$teardownStep->getCommandString($this->sshContext)}\n";
         }
         return $output;
+    }
+
+    public function runSetup()
+    {
+        $results = [];
+        $dbSync = SyncDb::$container->get(DatabaseSync::class);
+        foreach ($this->getSetupSteps() as $setupStep) {
+            $cmd = $setupStep->getCommandString($this->sshContext);
+            if ($setupStep->remote) {
+                $result = $dbSync->runRemote($this->sshContext, $setupStep);
+            } else {
+                $result = $dbSync->runLocal($setupStep);
+            }
+
+            $results[] = [
+                'stage' => 'setup',
+                'id' => $setupStep->id,
+                'teardownId' => $setupStep->relatedIds,
+                'name' => $setupStep->getName(),
+                'command' => $cmd,
+                'result' => $result,
+            ];
+            if ($result === false) {
+                var_dump($results);
+                throw new \Exception('Stopping');
+                // run related teardown
+            }
+        }
+        return $results;
+    }
+
+    public function runChain()
+    {
+        $results = [];
+        $dbSync = SyncDb::$container->get(DatabaseSync::class);
+        foreach ($this->getChainSteps() as $chainStep) {
+            $cmd = $chainStep->getCommandString($this->sshContext);
+            if ($chainStep->remote) {
+                $result = $dbSync->runRemote($this->sshContext, $chainStep);
+            } else {
+                $result = $dbSync->runLocal($chainStep);
+            }
+
+            $results[] = [
+                'stage' => 'chain',
+                'id' => $chainStep->id,
+                'name' => $chainStep->getName(),
+                'command' => $cmd,
+                'result' => $result,
+            ];
+            if ($result === false) {
+                throw new \Exception('Stopping');
+                // run related teardown
+            }
+        }
+        return $results;
+    }
+
+    public function runTeardown()
+    {
+        $results = [];
+        $dbSync = SyncDb::$container->get(DatabaseSync::class);
+        foreach ($this->getTeardownSteps() as $teardownStep) {
+            $cmd = $teardownStep->getCommandString($this->sshContext);
+            if ($teardownStep->remote) {
+                $result = $dbSync->runRemote($this->sshContext, $teardownStep);
+            } else {
+                $result = $dbSync->runLocal($teardownStep);
+            }
+
+            $results[] = [
+                'stage' => 'teardown',
+                'id' => $teardownStep->id,
+                'name' => $teardownStep->getName(),
+                'command' => $cmd,
+                'result' => $result,
+            ];
+            if ($result === false) {
+                throw new \Exception('Stopping');
+                // run related teardown
+            }
+        }
+        return $results;
+    }
+
+    public function run()
+    {
+        $results = $this->runSetup();
+        $results = \array_merge($results, $this->runChain());
+        $results = \array_merge($results, $this->runTeardown());
+        return $results;
     }
 }

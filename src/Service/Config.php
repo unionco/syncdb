@@ -27,6 +27,16 @@ class Config
         // get the specified env
         $env = $opts[$environment] ?? [];
 
+        // If this config extends another, load that first
+        if (\key_exists('extends', $env)) {
+            $e = $env['extends'];
+            try {
+                $common = \array_merge($common, $opts[$e]);
+            } catch (\Throwable $e) {
+                throw $e;
+            }
+        }
+
         return \array_merge($common, $env);
     }
 
