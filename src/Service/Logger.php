@@ -19,8 +19,15 @@ class Logger
     public function __call($name, $args)
     {
         if ($this->ml) {
-            if (\is_array($args) || \is_object($args)) {
-                $args = json_encode($args);
+            if (count($args) > 1 && $args[1]) {
+                $context = $args[1];
+                $context = \array_map(function ($val) {
+                    if (\is_object($val) || \is_array($val)) {
+                        return print_r($val, true);
+                    }
+                    return $val;
+                }, $context);
+                return $this->ml->{$name}($args[0], $context);
             }
             $this->ml->{$name}($args);
         }

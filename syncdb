@@ -3,43 +3,32 @@
 
 use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\SshInfo;
+use unionco\syncdb\Model\Scenario;
 use unionco\syncdb\Service\Config;
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Service\DatabaseSync;
-
-// use Symfony\Component\Config\FileLocator;
-// use Symfony\Component\Console\Application;
-// use Symfony\Component\DependencyInjection\ContainerBuilder;
-// use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 require __DIR__ . '/vendor/autoload.php';
 
 define('SYNCDB_CONFIG_PATH', __DIR__ . '/config.json');
 
-// // Create the service container for DI
-// $container = new ContainerBuilder();
-
-// // Load config/services.yml
-// $loader = new YamlFileLoader($container, new FileLocator());
-// $loader->load(SYNCDB_CONFIG_PATH . '/services.yml');
-// $container->compile();
-
-// // Create the app
-// $app = new Application();
-// // Initialize the service container (need to do this because its not a 'full' symfony app)
-// \unionco\syncdbFacade::init($container);
-
-// // Add CLI commands
-// $app->add(new \unionco\syncdbCommand\DumpDatabase());
-// // $app->add(new \unionco\syncdbCommand\RetrieveDatabaseDump());
-// // $app->add(new \unionco\syncdbCommand\ImportDatabase());
-// // Run the app and return its exit code
-// exit($app->run());
-
 $s = new SyncDb();
 $config = Config::parseConfig(SYNCDB_CONFIG_PATH, 'staging');
-// var_dump($config); die;
+
 $ssh = SshInfo::fromConfig($config);
-// var_dump($ssh); die;
-$db = DatabaseInfo::fromConfig($config, $ssh);
-SyncDb::$container->get(DatabaseSync::class)->dumpDatabase($ssh, $db);
+
+$remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
+$localDb = DatabaseInfo::localFromConfig($config);
+
+/** @var DatabaseSync */
+$dbSyncService = SyncDb::$container->get('dbSync');
+
+$scenario = new Scenario('Sync Database', $ssh);
+$scenario = $dbSyncService->dumpDatabase($scenario, $remoteDb);
+
+$scenario = $dbSyncService->importDatabase($scenario, $localDb);
+
+echo $scenario->preview();
+// $scenario->run();
+// echo $scenario->preview(); die;
+// SyncDb::$container->get(DatabaseSync::class)->dumpDatabase($ssh, $db);

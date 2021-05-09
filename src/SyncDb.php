@@ -7,19 +7,13 @@ use unionco\syncdb\Service\DatabaseSync;
 
 class SyncDb
 {
-    // public $service;
+    /** @var Container */
     public static $container;
 
     public function __construct()
     {
-        // $this->init();
         static::$container = new Container();
-        static::$container->add(Logger::class);
-        static::$container->add(DatabaseSync::class)->addArgument(Logger::class);
+        static::$container->add('log', Logger::class);
+        static::$container->add('dbSync', DatabaseSync::class)->addArgument('log');
     }
-
-    // protected function init(): void
-    // {
-    //     $this->service = new DatabaseSync();
-    // }
 }

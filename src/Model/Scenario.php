@@ -3,6 +3,7 @@
 namespace unionco\syncdb\Model;
 
 use unionco\syncdb\SyncDb;
+use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\ScenarioStep;
 use unionco\syncdb\Model\TeardownStep;
@@ -10,20 +11,31 @@ use unionco\syncdb\Service\DatabaseSync;
 
 class Scenario
 {
+    /** @var string */
     protected $name;
+
     /** @var ScenarioStep[] */
     protected $setupSteps = [];
+
     /** @var SetupStep[] */
     protected $chainSteps = [];
+
     /** @var TeardownStep[] */
     protected $teardownSteps = [];
 
+    /** @var null|SshInfo */
     protected $sshContext = null;
+
+    /** @var DatabaseSync|null */
+    protected static $dbSync = null;
 
     public function __construct($name, $sshContext)
     {
         $this->name = $name;
         $this->sshContext = $sshContext;
+        if (!static::$dbSync) {
+            static::$dbSync = SyncDb::$container->get('dbSync');
+        }
     }
 
     /**
@@ -131,16 +143,16 @@ class Scenario
         $output = '> setup steps' . PHP_EOL;
         foreach ($this->getSetupSteps() as $setupStep)
         {
-            $output .= "\t{$setupStep->id}|\t{$setupStep->getName()}|\t{$setupStep->getCommandString($this->sshContext)}\n";
+            $output .= "\n\t{$setupStep->id}\n\t{$setupStep->getName()}\n\t{$setupStep->getCommandString($this->sshContext)}\n";
         }
         $output .= '> chain steps' . PHP_EOL;
         foreach ($this->getChainSteps() as $chainStep) {
-            $output .= "\t{$chainStep->id}|\t{$chainStep->getName()}|\t{$chainStep->getCommandString($this->sshContext)}\n";
+            $output .= "\n\t{$chainStep->id}\n\t{$chainStep->getName()}\n\t{$chainStep->getCommandString($this->sshContext)}\n";
         }
 
         $output .= '> teardown steps' . PHP_EOL;
         foreach ($this->getTeardownSteps() as $teardownStep) {
-            $output .= "\t{$teardownStep->id} -> {$teardownStep->relatedId}|\t{$teardownStep->getName()}\t{$teardownStep->getCommandString($this->sshContext)}\n";
+            $output .= "\n\t{$teardownStep->id} -> {$teardownStep->relatedId}\n\t{$teardownStep->getName()}\n\t{$teardownStep->getCommandString($this->sshContext)}\n";
         }
         return $output;
     }
@@ -148,19 +160,19 @@ class Scenario
     public function runSetup()
     {
         $results = [];
-        $dbSync = SyncDb::$container->get(DatabaseSync::class);
+
         foreach ($this->getSetupSteps() as $setupStep) {
             $cmd = $setupStep->getCommandString($this->sshContext);
             if ($setupStep->remote) {
-                $result = $dbSync->runRemote($this->sshContext, $setupStep);
+                $result = static::$dbSync->runRemote($this->sshContext, $setupStep);
             } else {
-                $result = $dbSync->runLocal($setupStep);
+                $result = static::$dbSync->runLocal($setupStep);
             }
 
             $results[] = [
                 'stage' => 'setup',
                 'id' => $setupStep->id,
-                'teardownId' => $setupStep->relatedIds,
+                // 'teardownId' => $setupStep->get,
                 'name' => $setupStep->getName(),
                 'command' => $cmd,
                 'result' => $result,
@@ -177,13 +189,13 @@ class Scenario
     public function runChain()
     {
         $results = [];
-        $dbSync = SyncDb::$container->get(DatabaseSync::class);
+
         foreach ($this->getChainSteps() as $chainStep) {
             $cmd = $chainStep->getCommandString($this->sshContext);
             if ($chainStep->remote) {
-                $result = $dbSync->runRemote($this->sshContext, $chainStep);
+                $result = static::$dbSync->runRemote($this->sshContext, $chainStep);
             } else {
-                $result = $dbSync->runLocal($chainStep);
+                $result = static::$dbSync->runLocal($chainStep);
             }
 
             $results[] = [
@@ -204,19 +216,20 @@ class Scenario
     public function runTeardown()
     {
         $results = [];
-        $dbSync = SyncDb::$container->get(DatabaseSync::class);
+
         foreach ($this->getTeardownSteps() as $teardownStep) {
             $cmd = $teardownStep->getCommandString($this->sshContext);
             if ($teardownStep->remote) {
-                $result = $dbSync->runRemote($this->sshContext, $teardownStep);
+                $result = static::$dbSync->runRemote($this->sshContext, $teardownStep);
             } else {
-                $result = $dbSync->runLocal($teardownStep);
+                $result = static::$dbSync->runLocal($teardownStep);
             }
 
             $results[] = [
                 'stage' => 'teardown',
                 'id' => $teardownStep->id,
                 'name' => $teardownStep->getName(),
+                'relatedId' => $teardownStep->relatedId,
                 'command' => $cmd,
                 'result' => $result,
             ];
@@ -234,5 +247,25 @@ class Scenario
         $results = \array_merge($results, $this->runChain());
         $results = \array_merge($results, $this->runTeardown());
         return $results;
+    }
+
+    /**
+     * Get the value of sshContext
+     */
+    public function getSshContext()
+    {
+        return $this->sshContext;
+    }
+
+    /**
+     * Set the value of sshContext
+     *
+     * @return  self
+     */
+    public function setSshContext($sshContext)
+    {
+        $this->sshContext = $sshContext;
+
+        return $this;
     }
 }

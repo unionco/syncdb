@@ -60,10 +60,10 @@ abstract class Step
         return $this->commands;
     }
 
-    public function getCommandString($ssh)
+    public function getCommandString($ssh = null)
     {
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
-        if (!$this->remote) {
+        if (!$this->remote || !$ssh) {
             return $cmd;
         }
         return "{$ssh->getCommandPrefix()} '$cmd'";

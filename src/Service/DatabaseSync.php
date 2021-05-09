@@ -3,8 +3,6 @@
 namespace unionco\syncdb\Service;
 
 // use unionco\syncdbFacade;
-use Monolog\Handler\StreamHandler;
-use unionco\syncdb\Service\Logger;
 use Symfony\Component\Process\Process;
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\Scenario;
@@ -13,109 +11,120 @@ use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\Step;
 use unionco\syncdb\Model\TeardownStep;
-
-// use Symfony\Component\Validator\Validator\ValidatorInterface;
+use unionco\syncdb\Service\Logger;
 
 class DatabaseSync
 {
-    // /** @var ValidatorInterface */
-    // protected static $validator;
     private $logger;
 
     public function __construct(Logger $logger)
     {
-        // var_dump($logger); die;
         $this->logger = $logger;
     }
 
-    // private static function info($msg)
-    // {
-    //     if (static::$logger) {
-    //         static::$logger->info($msg);
-    //     }
-    // }
     public function runRemote(SshInfo $ssh, Step $step)
     {
-        $this->logger->info('runRemote: ' . $step->getName());
-        $this->logger->info($step->getCommandString($ssh));
         $cmd = $step->getCommandString($ssh);
-        $proc = Process::fromShellCommandline($cmd);
+        $this->logger->info(__METHOD__, [
+            'name' => $step->getName(),
+            'commandString' => $cmd,
+        ]);
 
-        try {
-            $proc->mustRun();
-        } catch (\Throwable $e) {
-            $this->logger->error($e);
-            throw $e;
-        }
-        $errors = $proc->getErrorOutput();
-        if ($errors) {
-            $this->logger->error($errors);
-            return false;
-            var_dump($errors); /** @todo */
-        }
-        return $proc->getOutput();
-    }
-
-    public function runLocal(Step $step)
-    {
-        $cmd = $step->getCommandString();
         $proc = Process::fromShellCommandline($cmd);
 
         try {
             $proc->mustRun();
         } catch (\Throwable$e) {
+            $this->logger->error($e);
             throw $e;
         }
         $errors = $proc->getErrorOutput();
         if ($errors) {
+            $this->logger->error(__METHOD__, ['errors' => $errors]);
             return false;
-            var_dump($errors); /** @todo */
         }
-        return $proc->getOutput();
+        $output = $proc->getOutput();
+        $this->logger->debug(__METHOD__, ['output' => $output]);
+        return $output;
     }
 
-    public function dumpDatabase(SshInfo $ssh, DatabaseInfo $db)
+    public function runLocal(Step $step)
     {
-        $scenario = new Scenario('Dump Database', $ssh);
+        $cmd = $step->getCommandString();
+        $this->logger->info(__METHOD__, [
+            'name' => $step->getName(),
+            'commandString' => $cmd
+        ]);
+
+        $proc = Process::fromShellCommandline($cmd);
+
+        try {
+            $proc->mustRun();
+        } catch (\Throwable$e) {
+            $this->logger->error(__METHOD__, ['errors' => $e]);
+            throw $e;
+        }
+        $errors = $proc->getErrorOutput();
+        if ($errors) {
+            $this->logger->error(__METHOD__, ['errors' => $errors]);
+            return false;
+        }
+        $output = $proc->getOutput();
+        $this->logger->debug(__METHOD__, ['output' => $output]);
+        return $output;
+    }
+
+    public function dumpDatabase(Scenario $scenario, DatabaseInfo $db)
+    {
         $driver = strtolower($db->getDriver());
+        $this->logger->debug('dumpDatabase - driver: ' . $driver);
+        $ssh = $scenario->getSshContext();
 
         if (strpos($driver, 'mysql') !== false) {
-            $setupCredentials = new SetupStep(
-                'Setup MySQL Credentials',
-                [
-                    'mkdir -p ~/.mysql',
-                    'chmod 0700 ~/.mysql',
-                    'touch ~/.mysql/mysqldump.cnf',
-                    "echo [mysqldump] > ~/.mysql/mysqldump.cnf",
-                    "echo user={$db->getUser()} >> ~/.mysql/mysqldump.cnf",
-                    "echo password={$db->getPass()} >> ~/.mysql/mysqldump.cnf",
-                    'chmod 0400 ~/.mysql/mysqldump.cnf',
-                ]);
-            $teardownCredentials = new TeardownStep(
-                'Teardown MySQL Credentials',
-                [
-                    'rm ~/.mysql/mysqldump.cnf',
-                ],
-                $setupCredentials
-            );
 
+            // Setup a remote config file, which allows using mysqldump without passwords on the CLI/ENV
+            $setupRemoteMysqlCredentials = new SetupStep(
+                'Setup Remote MySQL Credentials',
+                $this->mysqlCredentialCommands($db->getUser(), $db->getPass())
+            );
+            $teardownRemoteCredentials = new TeardownStep(
+                'Teardown Remote MySQL Credentials',
+                [
+                    'rm ~/.mysql/syncdb.cnf',
+                ],
+                $setupRemoteMysqlCredentials
+            );
+            $scenario
+                ->addSetupStep($setupRemoteMysqlCredentials)
+                ->addTeardownStep($teardownRemoteCredentials);
+
+            // Dump the database to a temporary location
             $chainDump = (new ScenarioStep('MySQL Dump', true))
                 ->setCommands([
-                    "mysqldump --defaults-extra-file=~/.mysql/mysqldump.cnf -h {$db->getHost()} {$db->getName()} > {$db->getTempFile()}",
+                    "mysqldump --defaults-extra-file=~/.mysql/syncdb.cnf -h {$db->getHost()} -P {$db->getPort()} {$db->getName()} > {$db->getTempFile()}",
                 ]);
-            $chainArchive = (new ScenarioStep('Archive', true))
-                ->setCommands([
-                    "tar cvjf {$db->getArchiveFile()} {$db->getTempFile()}",
-                ]);
-
             $teardownSql = new TeardownStep(
                 'Remove Remote SQL File', ["rm {$db->getTempFile()}"], $chainDump);
+
+            $scenario
+                ->addChainStep($chainDump);
+
+            // Archive the remote SQL file using tar/bzip2
+            $chainArchive = (new ScenarioStep('Archive', true))
+                ->setCommands([
+                    "cd {$db->getTempDir(true)}; tar cvjf {$db->getArchiveFile(false)} {$db->getTempFile(false)}",
+                ]);
+
+            // Cleanup both the raw SQL file and its related archive
             $teardownArchive = new TeardownStep(
                 'Remote Remote Archive File', ["rm {$db->getArchiveFile()}"], $chainArchive);
 
-            $archiveFile = $db->getArchiveFile();
-            $scpCommand = $ssh->getScpCommand($archiveFile, $archiveFile);
-            // \var_dump($scpCommand); die;
+            $scenario
+                ->addTeardownStep($teardownSql)
+                ->addTeardownStep($teardownArchive);
+
+            // Download the file using SCP
+            $scpCommand = $ssh->getScpCommand($db->getArchiveFile(true, true), $db->getArchiveFile(true, false));
             $downloadArchive = (new ScenarioStep(
                 'Download Archive File',
                 false))->setCommands([$scpCommand]);
@@ -128,47 +137,68 @@ class DatabaseSync
             );
 
             $scenario
-                ->addSetupStep($setupCredentials)
-                ->addTeardownStep($teardownCredentials)
-                ->addChainStep($chainDump)
-                ->addTeardownStep($teardownSql)
-                ->addChainStep($chainArchive)
-                ->addTeardownStep($teardownArchive)
                 ->addChainStep($downloadArchive)
                 ->addTeardownStep($teardownDownload);
-
-            // var_dump($scenario);
-            // echo $scenario->preview();die;
-
         } elseif (strpos($driver, 'pgsql') !== false) {
 
         } else {
             throw new \Exception('Invalid driver');
         }
 
-        $scenario->run();
-        // ->addSteps([
-        //     (new ScenarioStep(''))
-        //         // ->
-        // ]);
-
-        // static::runRemote($ssh, )
+        return $scenario;
     }
 
-    public function restoreDatabase()
+    private function mysqlCredentialCommands($user, $pass)
     {
-
+        return [
+            'mkdir -p ~/.mysql',
+            'chmod 0700 ~/.mysql',
+            'if test -f ~/.mysql/syncdb.cnf; then chmod 0600 ~/.mysql/syncdb.cnf; else touch ~/.mysql/syncdb.cnf; fi',
+            // 'touch ~/.mysql/syncdb.cnf',
+            "echo [mysqldump] > ~/.mysql/syncdb.cnf",
+            "echo user={$user} >> ~/.mysql/syncdb.cnf",
+            "echo password={$pass} >> ~/.mysql/syncdb.cnf",
+            'chmod 0400 ~/.mysql/syncdb.cnf',
+        ];
     }
 
-    public function getDatabaseArchive(SshInfo $ssh)
+    public function importDatabase(Scenario $scenario, DatabaseInfo $localDb)
     {
+        // Setup a config file, used for mysql client
+        $setupLocalMysqlCredentials = new SetupStep(
+            'Setup Local MySQL Credentials',
+            $this->mysqlCredentialCommands($localDb->getuser(), $localDb->getPass()),
+            false
+        );
+        $teardownLocalCredentials = new TeardownStep(
+            'Teardown Local MySQL Credentials',
+            [
+                'rm ~/.mysql/syncdb.cnf',
+            ],
+            $setupLocalMysqlCredentials,
+            false
+        );
 
+        $scenario->addSetupStep($setupLocalMysqlCredentials)
+            ->addTeardownStep($teardownLocalCredentials);
+
+        // Unarchive the file that was downloaded
+        $localUnarchive = (new ScenarioStep('Unarchive Local SQL file', false))
+            ->setCommands([
+                "cd {$localDb->getTempDir(false)}; tar xjf {$localDb->getArchiveFile(false, false)}",
+            ]);
+        $removeSqlFile = new TeardownStep('Remove Local SQL File', ["rm {$localDb->getTempFile(false, false)}"], $localUnarchive);
+
+        $scenario->addChainStep($localUnarchive)
+            ->addTeardownStep($removeSqlFile);
+
+        // Import the SQL file using mysql client
+        $import = (new ScenarioStep('Import Database', false))
+            ->setCommands([
+                "mysql --extra-defaults-file=~/.mysql/syncdb.cnf -h {$localDb->getHost()} -P {$localDb->getPort()} {$localDb->getName()} < {$localDb->getTempFile(true, false)}",
+            ]);
+        $scenario->addChainStep($import);
+
+        return $scenario;
     }
-
-    // public static function getCredentials(SshInfo $ssh): DatabaseInfo
-    // {
-    //     $cmd = "cd {$remoteWorkingDir}; grep .env -e 'DB'";
-    //     $output = static::runRemote($ssh, $cmd);
-    //     var_dump($output);
-    // }
 }

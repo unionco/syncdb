@@ -6,7 +6,7 @@ use unionco\syncdb\Model\Step;
 
 class SetupStep extends Step
 {
-    protected $teardownCommands;
+    // protected $teardownCommands;
     // public function __construct($setupCommands, $teardownCommands)
     // {
     //     parent::__construct($setupCommands);

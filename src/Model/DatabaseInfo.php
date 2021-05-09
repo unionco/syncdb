@@ -34,7 +34,7 @@ class DatabaseInfo extends ValidationModel
 
     protected $args;
 
-    public static function fromConfig(array $opts, ?SshInfo $ssh = null): ?DatabaseInfo
+    public static function remoteFromConfig(array $opts, ?SshInfo $ssh = null)
     {
         self::$readFromDotEnv = $opts['readDbConfigFromDotEnv'];
 
@@ -47,24 +47,41 @@ class DatabaseInfo extends ValidationModel
             $model->setName($opts['dbName']);
             $model->setPort($opts['dbPort']);
             $model->setArgs($opts['dbArgs']);
-            return $model;
         } else {
-            return self::fromRemote($opts, $ssh);
+            $model = self::remoteFromSsh($opts, $ssh);
         }
-        return null;
+        return $model;
     }
 
-    public static function fromRemote(array $config, SshInfo $ssh)
+    public static function remoteFromSsh(array $config, SshInfo $ssh)
     {
         $remoteWorkingDir = $config['remoteWorkingDir'];
-        $cmd = new SetupStep('Get DB Config', ["cd {$remoteWorkingDir}; grep .env -e \"DB_\""]);
-        // var_dump($cmd);
-        $result = SyncDb::$container->get(DatabaseSync::class)->runRemote($ssh, $cmd);
+        $cmd = new SetupStep('Get Remote DB Config', ["cd {$remoteWorkingDir}; grep .env -e \"DB_\""]);
 
-        // var_dump($result);
+        /** @var DatabaseSync */
+        $service = SyncDb::$container->get('dbSync');
+        $result = $service->runRemote($ssh, $cmd);
+        $model = self::fromGrepOutput($result);
+        return $model;
+        // var_dump($model); die;
+    }
+
+    public static function localFromConfig(array $config)
+    {
+        $localWorkingDir = $config['localWorkingDir'];
+        $cmd = new SetupStep('Get Local DB Config', ["cd {$localWorkingDir}; grep .env -e \"DB_\""]);
+        $service = SyncDb::$container->get('dbSync');
+        $result = $service->runLocal($cmd);
+        $model = self::fromGrepOutput($result);
+        return $model;
+    }
+
+    private static function fromGrepOutput($output)
+    {
         // If successful, the result will look like:
         // DB_DRIVER=xxxx
         // DB_USER="...."
+
         $rules = [
             'driver' => '/^DB_DRIVER=(.*)$/m',
             'user' => '/^DB_USER=(.*)$/m',
@@ -76,7 +93,7 @@ class DatabaseInfo extends ValidationModel
         $model = new DatabaseInfo();
         foreach ($rules as $handle => $rule) {
             $matches = [];
-            \preg_match_all($rule, $result, $matches, PREG_SET_ORDER, 0);
+            \preg_match_all($rule, $output, $matches, PREG_SET_ORDER, 0);
             // var_dump($matches);
             if ($matches) {
                 $model->{$handle} = $matches[0][1];
@@ -85,9 +102,7 @@ class DatabaseInfo extends ValidationModel
         if (!$model->valid()) {
              throw new \Exception('DB config is invalid');
         }
-
         return $model;
-        // var_dump($model); die;
     }
 
     public function valid(): bool
@@ -107,14 +122,21 @@ class DatabaseInfo extends ValidationModel
         return empty($this->errors);
     }
 
-    public function getTempFile()
+    public function getTempFile(bool $absolute = true, bool $remote = true)
     {
-        return '/tmp/db.sql';
+        $relative = 'db.sql';
+        return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
     }
 
-    public function getArchiveFile()
+    public function getTempDir(bool $remote = true)
     {
-        return '/tmp/db.sql.bz2';
+        return '/tmp';
+    }
+
+    public function getArchiveFile(bool $absolute = true, bool $remote = true)
+    {
+        $relative = 'db.sql.bz2';
+        return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
     }
 
     public function getDriver(): string

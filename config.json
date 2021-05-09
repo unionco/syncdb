@@ -1,6 +1,7 @@
 {
   "common": {
     "remoteWorkingDir": "/var/www/current/cms",
+    "localWorkingDir": "$HOME/Union/Sites/national-gypsum/cms",
     "ignoreTables": [
       "union_log",
       "craft_templatecaches",
