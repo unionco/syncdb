@@ -213,14 +213,14 @@ class DatabaseSync
      * @param string $pass
      * @return string[]
      */
-    private function mysqlCredentialCommands($user, $pass)
+    private function mysqlCredentialCommands($user, $pass, $dump = true)
     {
         return [
             'mkdir -p ~/.mysql',
             'chmod 0700 ~/.mysql',
             'if test -f ~/.mysql/syncdb.cnf; then chmod 0600 ~/.mysql/syncdb.cnf; else touch ~/.mysql/syncdb.cnf; fi',
             // 'touch ~/.mysql/syncdb.cnf',
-            "echo [mysqldump] > ~/.mysql/syncdb.cnf",
+            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > ~/.mysql/syncdb.cnf",
             "echo user={$user} >> ~/.mysql/syncdb.cnf",
             "echo password={$pass} >> ~/.mysql/syncdb.cnf",
             'chmod 0400 ~/.mysql/syncdb.cnf',
@@ -238,7 +238,7 @@ class DatabaseSync
         // Setup a config file, used for mysql client
         $setupLocalMysqlCredentials = new SetupStep(
             'Setup Local MySQL Credentials',
-            $this->mysqlCredentialCommands($localDb->getuser(), $localDb->getPass()),
+            $this->mysqlCredentialCommands($localDb->getuser(), $localDb->getPass(), false),
             false
         );
         $teardownLocalCredentials = new TeardownStep(
@@ -266,7 +266,7 @@ class DatabaseSync
         // Import the SQL file using mysql client
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "mysql --extra-defaults-file=~/.mysql/syncdb.cnf -h {$localDb->getHost()} -P {$localDb->getPort()} {$localDb->getName()} < {$localDb->getTempFile(true, false)}",
+                "mysql --defaults-file=~/.mysql/syncdb.cnf -h {$localDb->getHost()} -P {$localDb->getPort()} {$localDb->getName()} < {$localDb->getTempFile(true, false)}",
             ]);
         $scenario->addChainStep($import);
 
