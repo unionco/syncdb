@@ -32,4 +32,10 @@ class SyncDb
         $dbSync = static::$container->get('dbSync');
         return $dbSync->dumpConfig($config, $environment);
     }
+
+    public function preview(array $config, string $environment)
+    {
+        $dbSync = static::$container->get('dbSync');
+        return $dbSync->preview($config, $environment);
+    }
 }
