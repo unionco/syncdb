@@ -26,9 +26,9 @@ class DatabaseSync
     /**
      * Run the full database sync (local and remote)
      */
-    public function syncDatabase(string $configPath, string $environment)
+    public function syncDatabase(array $config, string $environment)
     {
-        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($configPath, $environment);
+        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
 
         $scenario = new Scenario('Sync Database', $ssh);
         $scenario = $this->dumpDatabase($scenario, $remoteDb);
@@ -37,18 +37,18 @@ class DatabaseSync
         return $scenario->run();
     }
 
-    public function dumpConfig(string $configPath, string $environment)
+    public function dumpConfig(array $config, string $environment)
     {
-        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($configPath, $environment);
+        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
         return compact('config', 'ssh', 'remoteDb', 'localDb');
     }
 
     /**
      * @return array{array,SshInfo,DatabaseInfo,DatabaseInfo}
      */
-    private static function parseConfigAndDatabases(string $configPath, string $environment)
+    private static function parseConfigAndDatabases(array $config, string $environment)
     {
-        $config = Config::parseConfig($configPath, $environment);
+        $config = Config::parseConfig($config, $environment);
         $ssh = SshInfo::fromConfig($config);
         $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
         $localDb = DatabaseInfo::localFromConfig($config);

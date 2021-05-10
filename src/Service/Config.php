@@ -15,23 +15,45 @@ class Config
         'dbArgs' => '',
     ];
 
-    public static function parseConfig(string $filename, string $environment = 'production')
-    {
-        /** @var array */
-        $opts = json_decode(\file_get_contents($filename), true);
+    /** @deprecated */
+    // public static function parseConfig(string $filename, string $environment = 'production')
+    // {
+    //     /** @var array */
+    //     $opts = json_decode(\file_get_contents($filename), true);
 
+    //     // get the common parts
+    //     $common = $opts['common'] ?? [];
+    //     $common = \array_merge(self::DEFAULT_CONFIG, $common);
+
+    //     // get the specified env
+    //     $env = $opts[$environment] ?? [];
+
+    //     // If this config extends another, load that first
+    //     if (\key_exists('extends', $env)) {
+    //         $e = $env['extends'];
+    //         try {
+    //             $common = \array_merge($common, $opts[$e]);
+    //         } catch (\Throwable $e) {
+    //             throw $e;
+    //         }
+    //     }
+
+    //     return \array_merge($common, $env);
+    // }
+
+    public static function parseConfig(array $config, string $environment = 'production') {
         // get the common parts
-        $common = $opts['common'] ?? [];
+        $common = $config['common'] ?? [];
         $common = \array_merge(self::DEFAULT_CONFIG, $common);
 
         // get the specified env
-        $env = $opts[$environment] ?? [];
+        $env = $config[$environment] ?? [];
 
         // If this config extends another, load that first
         if (\key_exists('extends', $env)) {
             $e = $env['extends'];
             try {
-                $common = \array_merge($common, $opts[$e]);
+                $common = \array_merge($common, $config[$e]);
             } catch (\Throwable $e) {
                 throw $e;
             }
@@ -39,6 +61,7 @@ class Config
 
         return \array_merge($common, $env);
     }
+
     // public static function findConfigFile()
     // {
     //     $paths = [

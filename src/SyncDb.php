@@ -17,15 +17,15 @@ class SyncDb
         static::$container->add('dbSync', DatabaseSync::class)->addArgument('log');
     }
 
-    public function run(string $configPath, string $environment)
+    public function run(array $config, string $environment)
     {
         $dbSync = static::$container->get('dbSync');
-        return $dbSync->syncDatabase($configPath, $environment);
+        return $dbSync->syncDatabase($config, $environment);
     }
 
-    public function dumpConfig(string $configPath, string $environment = 'production')
+    public function dumpConfig(array $config, string $environment = 'production')
     {
         $dbSync = static::$container->get('dbSync');
-        return $dbSync->dumpConfig($configPath, $environment);
+        return $dbSync->dumpConfig($config, $environment);
     }
 }

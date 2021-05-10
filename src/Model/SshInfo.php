@@ -38,9 +38,10 @@ class SshInfo extends ValidationModel
 
     public static function fromConfig(array $opts)
     {
-        if ($manualPrefix = $opts['manualPrefix'] ?? false) {
-            return static::fromSshString($manualPrefix);
-        }
+        // if ($manualPrefix = $opts['manualPrefix'] ?? false) {
+        //     return static::fromSshString($manualPrefix);
+        // }
+        var_dump($opts); die;
         $model = new SshInfo();
         $model->setHost($opts['host'] ?? '');
         $model->setUser($opts['user'] ?? '');
