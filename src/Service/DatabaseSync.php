@@ -78,7 +78,8 @@ class DatabaseSync
         try {
             $proc->mustRun();
         } catch (\Throwable $e) {
-            $this->logger->error($e);
+            // $this->logger->error($e);
+            $this->logger->error($e->getMessage());
             throw $e;
         }
         $errors = $proc->getErrorOutput();
@@ -111,7 +112,8 @@ class DatabaseSync
         try {
             $proc->mustRun();
         } catch (\Throwable $e) {
-            $this->logger->error(__METHOD__, ['errors' => $e]);
+            // $this->logger->error(__METHOD__, ['errors' => $e]);
+            $this->logger->error($e->getMessage());
             throw $e;
         }
         $errors = $proc->getErrorOutput();

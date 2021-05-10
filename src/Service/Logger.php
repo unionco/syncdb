@@ -18,10 +18,10 @@ class Logger
         }
     }
 
-    public function pushHandler(string $filePath)
+    public function pushHandler(string $filePath): void
     {
         if ($this->ml) {
-            $this->ml->pushHandler(new StreamHandler($filePath, ML::NOTICE));
+            $this->ml->pushHandler(new StreamHandler($filePath, ML::DEBUG));
         }
     }
 
