@@ -16,22 +16,22 @@ class DatabaseInfo extends ValidationModel implements TableView
     protected $driver = 'mysql';
 
     /** @var string */
-    protected $user;
+    protected $user = '';
 
     /** @var string */
-    protected $pass;
+    protected $pass = '';
 
     /** @var string */
-    protected $host;
+    protected $host = '';
 
     /** @var string|int */
-    protected $port;
+    protected $port = '';
 
     /** @var string */
-    protected $name;
+    protected $name = '';
 
     /** @var string[] */
-    protected $ignoreTables;
+    protected $ignoreTables = [];
 
     protected $args;
 
@@ -236,7 +236,7 @@ class DatabaseInfo extends ValidationModel implements TableView
      */
     public function getIgnoreTables(): array
     {
-        return $this->ignoreTables;
+        return $this->ignoreTables ?? [];
     }
 
     /**
@@ -297,7 +297,8 @@ class DatabaseInfo extends ValidationModel implements TableView
         $rows = [];
         foreach ($keys as $key) {
             $getter = "get" . \ucFirst($key);
-            $rows[] = [$key, $this->{$getter}()];
+            $value = $this->{$getter}() ?? '(empty)';
+            $rows[] = [$key, $value];
         }
         return $rows;
     }
