@@ -2,12 +2,12 @@
 
 namespace unionco\syncdb\Model;
 
-use unionco\syncdb\SyncDb;
-use unionco\syncdb\Model\SshInfo;
-use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\ScenarioStep;
+use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\TeardownStep;
 use unionco\syncdb\Service\DatabaseSync;
+use unionco\syncdb\SyncDb;
 
 class Scenario
 {
@@ -119,30 +119,14 @@ class Scenario
         return $this;
     }
 
-    public function compile()
-    {
-        // foreach ($this->getChainSteps() as $chainStep)
-        // {
-        //     if ($setup = $chainStep->getSetupSteps()) {
-        //         foreach ($setup as $step) {
-        //             $this->addSetupStep($step);
-        //         }
-        //     }
-        //     if ($teardown = $chainStep->getTeardownSteps()) {
-        //         foreach ($teardown as $step) {
-        //             $this->addTeardownStep($step);
-        //         }
-        //     }
-        // }
-    }
-
+    /**
+     * Debug
+     * @return string a text representation of all of the steps to run
+     */
     public function preview()
     {
-        // $this->compile();
-
         $output = '> setup steps' . PHP_EOL;
-        foreach ($this->getSetupSteps() as $setupStep)
-        {
+        foreach ($this->getSetupSteps() as $setupStep) {
             $output .= "\n\t{$setupStep->id}\n\t{$setupStep->getName()}\n\t{$setupStep->getCommandString($this->sshContext)}\n";
         }
         $output .= '> chain steps' . PHP_EOL;
@@ -186,6 +170,11 @@ class Scenario
         return $results;
     }
 
+    /**
+     * Run the chained commands in the scenario. Typically, these are the main actions
+     * (not setup/cleanup commands)
+     * @return list<array{stage:string,id:int,name:string,command:string,result:string|false}>
+     */
     public function runChain()
     {
         $results = [];
@@ -200,7 +189,7 @@ class Scenario
 
             $results[] = [
                 'stage' => 'chain',
-                'id' => $chainStep->id,
+                'id' => (int) $chainStep->id,
                 'name' => $chainStep->getName(),
                 'command' => $cmd,
                 'result' => $result,

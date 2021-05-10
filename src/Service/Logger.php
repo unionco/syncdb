@@ -27,9 +27,17 @@ class Logger
                     }
                     return $val;
                 }, $context);
-                return $this->ml->{$name}($args[0], $context);
+                try {
+                    return $this->ml->{$name}($args[0], $context);
+                } catch (\Throwable $e) {
+                    $this->ml->error($e->getMessage());
+                }
             }
-            $this->ml->{$name}($args);
+            try {
+                $this->ml->{$name}($args);
+            } catch (\Throwable $e) {
+                $this->ml->error($e->getMessage());
+            }
         }
     }
 }

@@ -24,7 +24,10 @@ class DatabaseSync
     }
 
     /**
-     * Run the full database sync (local and remote)
+     * Run the full database sync (dump, download, import)
+     * @param array $config
+     * @param string $environment
+     * @return
      */
     public function syncDatabase(array $config, string $environment)
     {
@@ -55,9 +58,12 @@ class DatabaseSync
 
         return [$config, $ssh, $remoteDb, $localDb];
     }
-
-    /**
-     * Run a remote command
+  /**
+     *
+     * Run a command on the server described by SshInfo $ssh
+     * @param SshInfo $ssh
+     * @param Step $step
+     * @return string|false
      */
     public function runRemote(SshInfo $ssh, Step $step)
     {
@@ -85,6 +91,13 @@ class DatabaseSync
         return $output;
     }
 
+    /**
+     * @todo consolidate this with runRemote
+     *
+     * Run a command locally
+     * @param Step $step
+     * @return string|false
+     */
     public function runLocal(Step $step)
     {
         $cmd = $step->getCommandString();
@@ -111,10 +124,16 @@ class DatabaseSync
         return $output;
     }
 
+    /**
+     * Add steps to the given scenario to dump the remote database
+     * @param Scenario $scenario
+     * @param DatabaseInfo $db
+     * @return Scenario
+     */
     public function dumpDatabase(Scenario $scenario, DatabaseInfo $db)
     {
         $driver = strtolower($db->getDriver());
-        $this->logger->debug('dumpDatabase - driver: ' . $driver);
+        $this->logger->debug('dumpDatabase - driver: ', ['driver' => $driver]);
         $ssh = $scenario->getSshContext();
 
         if (strpos($driver, 'mysql') !== false) {
@@ -185,6 +204,12 @@ class DatabaseSync
         return $scenario;
     }
 
+    /**
+     * Commands to setup the mysql credentials file, ~/.mysql/syncdb.cnf
+     * @param string $user
+     * @param string $pass
+     * @return string[]
+     */
     private function mysqlCredentialCommands($user, $pass)
     {
         return [
@@ -199,6 +224,12 @@ class DatabaseSync
         ];
     }
 
+    /**
+     * Add steps to the given scenario to import the downloaded database
+     * @param Scenario $scenario
+     * @param DatabaseInfo $localDb
+     * @return Scenario
+     */
     public function importDatabase(Scenario $scenario, DatabaseInfo $localDb)
     {
         // Setup a config file, used for mysql client
