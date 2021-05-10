@@ -5,9 +5,10 @@ namespace unionco\syncdb\Model;
 use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Model\TableView;
 use unionco\syncdb\Service\DatabaseSync;
 
-class DatabaseInfo extends ValidationModel
+class DatabaseInfo extends ValidationModel implements TableView
 {
     public static $readFromDotEnv = false;
 
@@ -288,5 +289,16 @@ class DatabaseInfo extends ValidationModel
         $this->port = $port;
 
         return $this;
+    }
+
+    public function getRows(): array
+    {
+        $keys = ['driver', 'user', 'pass', 'name', 'port', 'ignoreTables'];
+        $rows = [];
+        foreach ($keys as $key) {
+            $getter = "get" . \ucFirst($key);
+            $rows[] = [$key, $this->{$getter}()];
+        }
+        return $rows;
     }
 }

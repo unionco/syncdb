@@ -2,7 +2,9 @@
 
 namespace unionco\syncdb\Model;
 
-class SshInfo extends ValidationModel
+use unionco\syncdb\Model\TableView;
+
+class SshInfo extends ValidationModel implements TableView
 {
     /**
      * @var string|null
@@ -212,5 +214,16 @@ class SshInfo extends ValidationModel
         $this->identity = $identity;
 
         return $this;
+    }
+
+    public function getRows(): array
+    {
+        $keys = ['host', 'user', 'port', 'identity', 'commandPrefix', 'warnings', 'errors'];
+        $rows = [];
+        foreach ($keys as $key) {
+            $getter = "get" . \ucFirst($key);
+            $rows[] = [$key, $this->{$getter}()];
+        }
+        return $rows;
     }
 }
