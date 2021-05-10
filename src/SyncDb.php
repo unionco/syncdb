@@ -22,4 +22,10 @@ class SyncDb
         $dbSync = static::$container->get('dbSync');
         return $dbSync->syncDatabase($configPath, $environment);
     }
+
+    public function dumpConfig(string $configPath, string $environment = 'production')
+    {
+        $dbSync = static::$container->get('dbSync');
+        return $dbSync->dumpConfig($configPath, $environment);
+    }
 }

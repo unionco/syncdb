@@ -22,12 +22,13 @@ class DatabaseSync
     {
         $this->logger = $logger;
     }
+
+    /**
+     * Run the full database sync (local and remote)
+     */
     public function syncDatabase(string $configPath, string $environment)
     {
-        $config = Config::parseConfig($configPath, $environment);
-        $ssh = SshInfo::fromConfig($config);
-        $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
-        $localDb = DatabaseInfo::localFromConfig($config);
+        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($configPath, $environment);
 
         $scenario = new Scenario('Sync Database', $ssh);
         $scenario = $this->dumpDatabase($scenario, $remoteDb);
@@ -36,6 +37,28 @@ class DatabaseSync
         return $scenario->run();
     }
 
+    public function dumpConfig(string $configPath, string $environment)
+    {
+        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($configPath, $environment);
+        return compact('config', 'ssh', 'remoteDb', 'localDb');
+    }
+
+    /**
+     * @return array{array,SshInfo,DatabaseInfo,DatabaseInfo}
+     */
+    private static function parseConfigAndDatabases(string $configPath, string $environment)
+    {
+        $config = Config::parseConfig($configPath, $environment);
+        $ssh = SshInfo::fromConfig($config);
+        $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
+        $localDb = DatabaseInfo::localFromConfig($config);
+
+        return [$config, $ssh, $remoteDb, $localDb];
+    }
+
+    /**
+     * Run a remote command
+     */
     public function runRemote(SshInfo $ssh, Step $step)
     {
         $cmd = $step->getCommandString($ssh);
@@ -48,7 +71,7 @@ class DatabaseSync
 
         try {
             $proc->mustRun();
-        } catch (\Throwable$e) {
+        } catch (\Throwable $e) {
             $this->logger->error($e);
             throw $e;
         }
@@ -74,7 +97,7 @@ class DatabaseSync
 
         try {
             $proc->mustRun();
-        } catch (\Throwable$e) {
+        } catch (\Throwable $e) {
             $this->logger->error(__METHOD__, ['errors' => $e]);
             throw $e;
         }

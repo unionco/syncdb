@@ -39,7 +39,6 @@ class Config
 
         return \array_merge($common, $env);
     }
-
     // public static function findConfigFile()
     // {
     //     $paths = [
