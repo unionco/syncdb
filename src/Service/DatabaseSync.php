@@ -178,6 +178,7 @@ class DatabaseSync
                 'Remote Remote Archive File', ["rm {$db->getArchiveFile()}"], $chainArchive);
 
             $scenario
+                ->addChainStep($chainArchive)
                 ->addTeardownStep($teardownSql)
                 ->addTeardownStep($teardownArchive);
 
