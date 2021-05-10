@@ -3,15 +3,16 @@
 namespace unionco\syncdb\Service;
 
 // use unionco\syncdbFacade;
+use unionco\syncdb\Model\Step;
+use unionco\syncdb\Model\SshInfo;
+use unionco\syncdb\Model\Scenario;
+use unionco\syncdb\Service\Config;
+use unionco\syncdb\Service\Logger;
+use unionco\syncdb\Model\SetupStep;
 use Symfony\Component\Process\Process;
 use unionco\syncdb\Model\DatabaseInfo;
-use unionco\syncdb\Model\Scenario;
 use unionco\syncdb\Model\ScenarioStep;
-use unionco\syncdb\Model\SetupStep;
-use unionco\syncdb\Model\SshInfo;
-use unionco\syncdb\Model\Step;
 use unionco\syncdb\Model\TeardownStep;
-use unionco\syncdb\Service\Logger;
 
 class DatabaseSync
 {
@@ -20,6 +21,19 @@ class DatabaseSync
     public function __construct(Logger $logger)
     {
         $this->logger = $logger;
+    }
+    public function syncDatabase(string $configPath, string $environment)
+    {
+        $config = Config::parseConfig($configPath, $environment);
+        $ssh = SshInfo::fromConfig($config);
+        $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
+        $localDb = DatabaseInfo::localFromConfig($config);
+
+        $scenario = new Scenario('Sync Database', $ssh);
+        $scenario = $this->dumpDatabase($scenario, $remoteDb);
+        $scenario = $this->importDatabase($scenario, $localDb);
+
+        return $scenario->run();
     }
 
     public function runRemote(SshInfo $ssh, Step $step)

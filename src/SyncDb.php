@@ -16,4 +16,10 @@ class SyncDb
         static::$container->add('log', Logger::class);
         static::$container->add('dbSync', DatabaseSync::class)->addArgument('log');
     }
+
+    public function run(string $configPath, string $environment)
+    {
+        $dbSync = static::$container->get('dbSync');
+        return $dbSync->run($configPath, $environment);
+    }
 }
