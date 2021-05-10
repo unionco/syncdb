@@ -258,7 +258,7 @@ class DatabaseSync
             ->setCommands([
                 "cd {$localDb->getTempDir(false)}; tar xjf {$localDb->getArchiveFile(false, false)}",
             ]);
-        $removeSqlFile = new TeardownStep('Remove Local SQL File', ["rm {$localDb->getTempFile(false, false)}"], $localUnarchive);
+        $removeSqlFile = new TeardownStep('Remove Local SQL File', ["rm {$localDb->getTempFile(true, false)}"], $localUnarchive);
 
         $scenario->addChainStep($localUnarchive)
             ->addTeardownStep($removeSqlFile);
