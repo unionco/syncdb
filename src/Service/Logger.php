@@ -7,12 +7,21 @@ use Monolog\Handler\StreamHandler;
 
 class Logger
 {
+    private $ml;
+
     public function __construct()
     {
         if (class_exists('Monolog\Logger')) {
             // $this->logger = new Logger()
             $this->ml = new ML('default');
             $this->ml->pushHandler(new StreamHandler('php://stdout', ML::DEBUG));
+        }
+    }
+
+    public function pushHandler(string $filePath)
+    {
+        if ($this->ml) {
+            $this->ml->pushHandler(new StreamHandler($filePath, ML::NOTICE));
         }
     }
 

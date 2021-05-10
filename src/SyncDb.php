@@ -10,11 +10,15 @@ class SyncDb
     /** @var Container */
     public static $container;
 
-    public function __construct()
+    public function __construct($logPath = null)
     {
         static::$container = new Container();
         static::$container->add('log', Logger::class);
         static::$container->add('dbSync', DatabaseSync::class)->addArgument('log');
+
+        if ($logPath) {
+            static::$container->get('log')->pushHandler($logPath);
+        }
     }
 
     public function run(array $config, string $environment)
