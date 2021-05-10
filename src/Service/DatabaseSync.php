@@ -170,7 +170,7 @@ class DatabaseSync
             // Archive the remote SQL file using tar/bzip2
             $chainArchive = (new ScenarioStep('Archive', true))
                 ->setCommands([
-                    "cd {$db->getTempDir(true)}; tar cvjf {$db->getArchiveFile(false)} {$db->getTempFile(false)}",
+                    "tar cvjf {$db->getArchiveFile(false)} -C {$db->getTempFile(true)}",
                 ]);
 
             // Cleanup both the raw SQL file and its related archive
