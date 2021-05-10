@@ -46,6 +46,17 @@ class DatabaseSync
         return compact('config', 'ssh', 'remoteDb', 'localDb');
     }
 
+    public function preview(array $config, string $environment): Scenario
+    {
+        [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
+
+        $scenario = new Scenario('Sync Database', $ssh);
+        $scenario = $this->dumpDatabase($scenario, $remoteDb);
+        $scenario = $this->importDatabase($scenario, $localDb);
+
+        return $scenario;
+    }
+
     /**
      * @return array{array,SshInfo,DatabaseInfo,DatabaseInfo}
      */
@@ -207,25 +218,6 @@ class DatabaseSync
         return $scenario;
     }
 
-    /**
-     * Commands to setup the mysql credentials file, ~/.mysql/syncdb.cnf
-     * @param string $user
-     * @param string $pass
-     * @return string[]
-     */
-    private function mysqlCredentialCommands($user, $pass, $dump = true)
-    {
-        return [
-            'mkdir -p ~/.mysql',
-            'chmod 0700 ~/.mysql',
-            'if test -f ~/.mysql/syncdb.cnf; then chmod 0600 ~/.mysql/syncdb.cnf; else touch ~/.mysql/syncdb.cnf; fi',
-            // 'touch ~/.mysql/syncdb.cnf',
-            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > ~/.mysql/syncdb.cnf",
-            "echo user={$user} >> ~/.mysql/syncdb.cnf",
-            "echo password={$pass} >> ~/.mysql/syncdb.cnf",
-            'chmod 0400 ~/.mysql/syncdb.cnf',
-        ];
-    }
 
     /**
      * Add steps to the given scenario to import the downloaded database
@@ -251,25 +243,44 @@ class DatabaseSync
         );
 
         $scenario->addSetupStep($setupLocalMysqlCredentials)
-            ->addTeardownStep($teardownLocalCredentials);
+        ->addTeardownStep($teardownLocalCredentials);
 
         // Unarchive the file that was downloaded
         $localUnarchive = (new ScenarioStep('Unarchive Local SQL file', false))
-            ->setCommands([
-                "cd {$localDb->getTempDir(false)}; tar xjf {$localDb->getArchiveFile(false, false)}",
+        ->setCommands([
+            "cd {$localDb->getTempDir(false)}; tar xjf {$localDb->getArchiveFile(false, false)}",
             ]);
         $removeSqlFile = new TeardownStep('Remove Local SQL File', ["rm {$localDb->getTempFile(true, false)}"], $localUnarchive);
 
         $scenario->addChainStep($localUnarchive)
-            ->addTeardownStep($removeSqlFile);
+        ->addTeardownStep($removeSqlFile);
 
         // Import the SQL file using mysql client
         $import = (new ScenarioStep('Import Database', false))
-            ->setCommands([
-                "mysql --defaults-file=~/.mysql/syncdb.cnf -h {$localDb->getHost()} -P {$localDb->getPort()} {$localDb->getName()} < {$localDb->getTempFile(true, false)}",
+        ->setCommands([
+            "mysql --defaults-file=~/.mysql/syncdb.cnf -h {$localDb->getHost()} -P {$localDb->getPort()} {$localDb->getName()} < {$localDb->getTempFile(true, false)}",
             ]);
-        $scenario->addChainStep($import);
+            $scenario->addChainStep($import);
 
         return $scenario;
+    }
+    /**
+     * Commands to setup the mysql credentials file, ~/.mysql/syncdb.cnf
+     * @param string $user
+     * @param string $pass
+     * @return string[]
+     */
+    private function mysqlCredentialCommands($user, $pass, $dump = true)
+    {
+        return [
+            'mkdir -p ~/.mysql',
+            'chmod 0700 ~/.mysql',
+            'if test -f ~/.mysql/syncdb.cnf; then chmod 0600 ~/.mysql/syncdb.cnf; else touch ~/.mysql/syncdb.cnf; fi',
+            // 'touch ~/.mysql/syncdb.cnf',
+            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > ~/.mysql/syncdb.cnf",
+            "echo user={$user} >> ~/.mysql/syncdb.cnf",
+            "echo password={$pass} >> ~/.mysql/syncdb.cnf",
+            'chmod 0400 ~/.mysql/syncdb.cnf',
+        ];
     }
 }
