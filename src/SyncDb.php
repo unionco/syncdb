@@ -20,6 +20,6 @@ class SyncDb
     public function run(string $configPath, string $environment)
     {
         $dbSync = static::$container->get('dbSync');
-        return $dbSync->run($configPath, $environment);
+        return $dbSync->syncDatabase($configPath, $environment);
     }
 }
