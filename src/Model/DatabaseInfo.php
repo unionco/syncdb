@@ -70,7 +70,7 @@ class DatabaseInfo extends ValidationModel implements TableView
     public static function localFromConfig(array $config): self
     {
         $localWorkingDir = $config['localWorkingDir'];
-        $cmd = new SetupStep('Get Local DB Config', ["grep {$localWorkingDir}/.env -e \"DB_\" 2>/dev/null"], false, false, true);
+        $cmd = new SetupStep('Get Local DB Config', ["grep {$localWorkingDir}/.env -e \"DB_\""], false, false, true);
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runLocal($cmd);
         $model = self::fromGrepOutput($result);

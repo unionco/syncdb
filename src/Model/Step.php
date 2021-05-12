@@ -83,4 +83,24 @@ abstract class Step
         $this->id = static::$nextId;
         static::$nextId++;
     }
+
+    /**
+     * Get the value of ignoreWarnings
+     */
+    public function getIgnoreWarnings()
+    {
+        return $this->ignoreWarnings;
+    }
+
+    /**
+     * Set the value of ignoreWarnings
+     *
+     * @return  self
+     */
+    public function setIgnoreWarnings($ignoreWarnings)
+    {
+        $this->ignoreWarnings = $ignoreWarnings;
+
+        return $this;
+    }
 }
