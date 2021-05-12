@@ -127,9 +127,9 @@ class Postgres implements DatabaseImplementation
 
         $connectionString = "{$host}:{$port}:{$name}:{$user}:{$pass}";
         return [
-            "if test -f {${self::CREDENTIALS_FILE}}; then chmod 0700 {${self::CREDENTIALS_FILE}}; mv {${self::CREDENTIALS_FILE}} {${self::CREDENTIALS_FILE_BACKUP}}; else touch {${self::CREDENTIALS_FILE}}; fi",
-            "echo {$connectionString} > {${self::CREDENTIALS_FILE}}",
-            "chmod 0600 {${self::CREDENTIALS_FILE}}",
+            "if test -f " . self::CREDENTIALS_FILE . "; then chmod 0700 " . self::CREDENTIALS_FILE . "; mv " . self::CREDENTIALS_FILE . " " . self::CREDENTIALS_FILE_BACKUP . "; else touch " . self::CREDENTIALS_FILE . "; fi",
+            "echo {$connectionString} > " . self::CREDENTIALS_FILE . "",
+            "chmod 0600 " . self::CREDENTIALS_FILE . "",
         ];
     }
 
@@ -137,7 +137,7 @@ class Postgres implements DatabaseImplementation
     public static function teardownCredentialsCommands()
     {
         return [
-            "if test -f {${self::CREDENTIALS_FILE_BACKUP}}; mv {${self::CREDENTIALS_FILE_BACKUP}} {${self::CREDENTIALS_FILE}}; chmod 0600 {${self::CREDENTIALS_FILE}}; fi;"
+            "if test -f " . self::CREDENTIALS_FILE_BACKUP . "; mv " . self::CREDENTIALS_FILE_BACKUP . " " . self::CREDENTIALS_FILE . "; chmod 0600 " . self::CREDENTIALS_FILE . "; fi;"
         ];
     }
 }

@@ -34,7 +34,7 @@ class Mysql implements DatabaseImplementation
         // Dump the database to a temporary location
         $chainDump = (new ScenarioStep('MySQL Dump', true))
             ->setCommands([
-                "mysqldump --defaults-extra-file={${self::CREDENTIALS_FILE}} -h {$db->getHost()} -P {$db->getPort()} {$db->getName()} > {$db->getTempFile()}",
+                "mysqldump --defaults-extra-file=" . self::CREDENTIALS_FILE . " -h {$db->getHost()} -P {$db->getPort()} {$db->getName()} > {$db->getTempFile()}",
             ]);
         $teardownSql = new TeardownStep(
             'Remove Remote SQL File', ["rm {$db->getTempFile()}"], $chainDump);
@@ -107,7 +107,7 @@ class Mysql implements DatabaseImplementation
         // Import the SQL file using mysql client
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "mysql --defaults-file={${self::CREDENTIALS_FILE}} -h {$db->getHost()} -P {$db->getPort()} {$db->getName()} < {$db->getTempFile(true, false)}",
+                "mysql --defaults-file=" . self::CREDENTIALS_FILE . " -h {$db->getHost()} -P {$db->getPort()} {$db->getName()} < {$db->getTempFile(true, false)}",
             ]);
         $scenario->addChainStep($import);
 
@@ -121,20 +121,20 @@ class Mysql implements DatabaseImplementation
         $pass = $db->getPass();
 
         return [
-            "mkdir -p {${self::CREDENTIALS_PATH}}",
-            "chmod 0700 {${self::CREDENTIALS_PATH}}",
-            "if test -f {${self::CREDENTIALS_FILE}}; then chmod 0600 {${self::CREDENTIALS_FILE}}; else touch {${self::CREDENTIALS_FILE}}; fi",
-            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > {${self::CREDENTIALS_FILE}}",
-            "echo user={$user} >> {${self::CREDENTIALS_FILE}}",
-            "echo password={$pass} >> {${self::CREDENTIALS_FILE}}",
-            "chmod 0400 {${self::CREDENTIALS_FILE}}",
+            "mkdir -p " . self::CREDENTIALS_PATH . "",
+            "chmod 0700 " . self::CREDENTIALS_PATH . "",
+            "if test -f " . self::CREDENTIALS_FILE . "; then chmod 0600 " . self::CREDENTIALS_FILE . "; else touch " . self::CREDENTIALS_FILE . "; fi",
+            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > " . self::CREDENTIALS_FILE . "",
+            "echo user={$user} >> " . self::CREDENTIALS_FILE . "",
+            "echo password={$pass} >> " . self::CREDENTIALS_FILE . "",
+            "chmod 0400 " . self::CREDENTIALS_FILE . "",
         ];
     }
     /** @inheritdoc */
     public static function teardownCredentialsCommands()
     {
         return [
-            "rm {${self::CREDENTIALS_FILE}}"
+            "rm " . self::CREDENTIALS_FILE . ""
         ];
     }
 }
