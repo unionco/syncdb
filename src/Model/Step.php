@@ -16,13 +16,16 @@ abstract class Step
 
     public $chain = true;
 
-    public function __construct($name, $commands, $remote = true, $chain = true)
+    public $ignoreWarnings = false;
+
+    public function __construct($name, $commands, $remote = true, $chain = true, $ignoreWarnings = false)
     {
         $this->setName($name);
         $this->setId();
         $this->remote = $remote;
         $this->setCommands($commands);
         $this->chain = $chain;
+        $this->ignoreWarnings = $ignoreWarnings;
     }
 
 /**
@@ -64,9 +67,15 @@ abstract class Step
     {
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
         if (!$this->remote || !$ssh) {
-            return $cmd;
+            // $cmd;
+        } else {
+            $cmd = "{$ssh->getCommandPrefix()} '$cmd'";
         }
-        return "{$ssh->getCommandPrefix()} '$cmd'";
+        if ($this->ignoreWarnings) {
+            $cmd .= " 2>/dev/null";
+        }
+        return $cmd;
+
     }
 
     protected function setId()
