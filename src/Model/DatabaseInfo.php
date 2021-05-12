@@ -57,7 +57,7 @@ class DatabaseInfo extends ValidationModel implements TableView
     public static function remoteFromSsh(array $config, SshInfo $ssh): self
     {
         $remoteWorkingDir = $config['remoteWorkingDir'];
-        $cmd = new SetupStep('Get Remote DB Config', ["cd {$remoteWorkingDir}; grep .env -e \"DB_\""]);
+        $cmd = new SetupStep('Get Remote DB Config', ["grep {$remoteWorkingDir}/.env -e \"DB_\""]);
 
         /** @var DatabaseSync */
         $service = SyncDb::$container->get('dbSync');
