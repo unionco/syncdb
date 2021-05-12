@@ -183,7 +183,7 @@ class DatabaseSync
      */
     private function importDatabase(Scenario $scenario, DatabaseInfo $localDb)
     {
-        $driver = $db->getDriver();
+        $driver = $localDb->getDriver();
         $this->logger->debug('importDatabase - driver: ', ['driver' => $driver]);
 
         switch ($driver) {
