@@ -9,6 +9,7 @@ use unionco\syncdb\Model\Scenario;
 use unionco\syncdb\Service\Config;
 use unionco\syncdb\Service\Logger;
 use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Service\Postgres;
 use Symfony\Component\Process\Process;
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\ScenarioStep;
@@ -156,74 +157,18 @@ class DatabaseSync
      */
     private function dumpDatabase(Scenario $scenario, DatabaseInfo $db)
     {
-        $driver = strtolower($db->getDriver());
+        $driver = $db->getDriver();
         $this->logger->debug('dumpDatabase - driver: ', ['driver' => $driver]);
-        $ssh = $scenario->getSshContext();
 
-        if (strpos($driver, 'mysql') !== false) {
-
-            // Setup a remote config file, which allows using mysqldump without passwords on the CLI/ENV
-            $setupRemoteMysqlCredentials = new SetupStep(
-                'Setup Remote MySQL Credentials',
-                $this->mysqlCredentialCommands($db->getUser(), $db->getPass())
-            );
-            $teardownRemoteCredentials = new TeardownStep(
-                'Teardown Remote MySQL Credentials',
-                [
-                    'rm ~/.mysql/syncdb.cnf',
-                ],
-                $setupRemoteMysqlCredentials
-            );
-            $scenario
-                ->addSetupStep($setupRemoteMysqlCredentials)
-                ->addTeardownStep($teardownRemoteCredentials);
-
-            // Dump the database to a temporary location
-            $chainDump = (new ScenarioStep('MySQL Dump', true))
-                ->setCommands([
-                    "mysqldump --defaults-extra-file=~/.mysql/syncdb.cnf -h {$db->getHost()} -P {$db->getPort()} {$db->getName()} > {$db->getTempFile()}",
-                ]);
-            $teardownSql = new TeardownStep(
-                'Remove Remote SQL File', ["rm {$db->getTempFile()}"], $chainDump);
-
-            $scenario
-                ->addChainStep($chainDump);
-
-            // Archive the remote SQL file using tar/bzip2
-            $chainArchive = (new ScenarioStep('Archive', true))
-                ->setCommands([
-                    "tar cvjf {$db->getArchiveFile(true, true)} -C {$db->getTempDir(true)} {$db->getTempFile(false, true)}",
-                ]);
-
-            // Cleanup both the raw SQL file and its related archive
-            $teardownArchive = new TeardownStep(
-                'Remote Remote Archive File', ["rm {$db->getArchiveFile()}"], $chainArchive);
-
-            $scenario
-                ->addChainStep($chainArchive)
-                ->addTeardownStep($teardownSql)
-                ->addTeardownStep($teardownArchive);
-
-            // Download the file using SCP
-            $scpCommand = $ssh->getScpCommand($db->getArchiveFile(true, true), $db->getArchiveFile(true, false));
-            $downloadArchive = (new ScenarioStep(
-                'Download Archive File',
-                false))->setCommands([$scpCommand]);
-
-            $teardownDownload = new TeardownStep(
-                'Remove Local Archive File',
-                ["rm {$db->getArchiveFile()}"],
-                $downloadArchive,
-                false
-            );
-
-            $scenario
-                ->addChainStep($downloadArchive)
-                ->addTeardownStep($teardownDownload);
-        } elseif (strpos($driver, 'pgsql') !== false) {
-
-        } else {
-            throw new \Exception('Invalid driver');
+        switch ($driver) {
+            case 'mysql':
+                $scenario = Mysql::dumpDatabase($scenario, $db);
+                break;
+            case 'pgsql':
+                $scenario = Postgres::dumpDatabase($scenario, $db);
+                break;
+            default:
+                throw new \Exception('Invalid driver');
         }
 
         return $scenario;
@@ -238,60 +183,20 @@ class DatabaseSync
      */
     private function importDatabase(Scenario $scenario, DatabaseInfo $localDb)
     {
-        // Setup a config file, used for mysql client
-        $setupLocalMysqlCredentials = new SetupStep(
-            'Setup Local MySQL Credentials',
-            $this->mysqlCredentialCommands($localDb->getuser(), $localDb->getPass(), false),
-            false
-        );
-        $teardownLocalCredentials = new TeardownStep(
-            'Teardown Local MySQL Credentials',
-            [
-                'rm ~/.mysql/syncdb.cnf',
-            ],
-            $setupLocalMysqlCredentials,
-            false
-        );
+        $driver = $db->getDriver();
+        $this->logger->debug('importDatabase - driver: ', ['driver' => $driver]);
 
-        $scenario->addSetupStep($setupLocalMysqlCredentials)
-        ->addTeardownStep($teardownLocalCredentials);
-
-        // Unarchive the file that was downloaded
-        $localUnarchive = (new ScenarioStep('Unarchive Local SQL file', false))
-        ->setCommands([
-            "cd {$localDb->getTempDir(false)}; tar xjf {$localDb->getArchiveFile(false, false)}",
-            ]);
-        $removeSqlFile = new TeardownStep('Remove Local SQL File', ["rm {$localDb->getTempFile(true, false)}"], $localUnarchive, false);
-
-        $scenario->addChainStep($localUnarchive)
-        ->addTeardownStep($removeSqlFile);
-
-        // Import the SQL file using mysql client
-        $import = (new ScenarioStep('Import Database', false))
-        ->setCommands([
-            "mysql --defaults-file=~/.mysql/syncdb.cnf -h {$localDb->getHost()} -P {$localDb->getPort()} {$localDb->getName()} < {$localDb->getTempFile(true, false)}",
-            ]);
-            $scenario->addChainStep($import);
+        switch ($driver) {
+            case 'mysql':
+                $scenario = Mysql::importDatabase($scenario, $localDb);
+                break;
+            case 'pgsql':
+                $scenario = Postgres::importDatabase($scenario, $localDb);
+                break;
+            default:
+                throw new \Exception('Invalid driver');
+        }
 
         return $scenario;
-    }
-    /**
-     * Commands to setup the mysql credentials file, ~/.mysql/syncdb.cnf
-     * @param string $user
-     * @param string $pass
-     * @return string[]
-     */
-    private function mysqlCredentialCommands($user, $pass, $dump = true)
-    {
-        return [
-            'mkdir -p ~/.mysql',
-            'chmod 0700 ~/.mysql',
-            'if test -f ~/.mysql/syncdb.cnf; then chmod 0600 ~/.mysql/syncdb.cnf; else touch ~/.mysql/syncdb.cnf; fi',
-            // 'touch ~/.mysql/syncdb.cnf',
-            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > ~/.mysql/syncdb.cnf",
-            "echo user={$user} >> ~/.mysql/syncdb.cnf",
-            "echo password={$pass} >> ~/.mysql/syncdb.cnf",
-            'chmod 0400 ~/.mysql/syncdb.cnf',
-        ];
     }
 }

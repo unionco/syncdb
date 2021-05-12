@@ -125,7 +125,17 @@ class DatabaseInfo extends ValidationModel implements TableView
 
     public function getTempFile(bool $absolute = true, bool $remote = true): string
     {
-        $relative = 'db.sql';
+        $relative = '';
+        switch ($this->driver) {
+            case 'mysql':
+                $relative = 'db.sql';
+                break;
+            case 'pgsql':
+                $relative = 'db.dump';
+                break;
+            default:
+                throw new \Exception('Invalid driver');
+        }
         return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
     }
 
@@ -136,13 +146,13 @@ class DatabaseInfo extends ValidationModel implements TableView
 
     public function getArchiveFile(bool $absolute = true, bool $remote = true): string
     {
-        $relative = 'db.sql.bz2';
+        $relative = $this->getTempFile($absolute, $remote) . '.bz2';
         return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
     }
 
     public function getDriver(): string
     {
-        return $this->driver;
+        return \strtolower($this->driver);
     }
 
     public function setDriver(string $driver): self
