@@ -230,7 +230,7 @@ class Scenario
         return $results;
     }
 
-    public function run()
+    public function run(): array
     {
         $results = $this->runSetup();
         $results = \array_merge($results, $this->runChain());

@@ -35,7 +35,7 @@ class DatabaseInfo extends ValidationModel implements TableView
 
     protected $args;
 
-    public static function remoteFromConfig(array $opts, ?SshInfo $ssh = null)
+    public static function remoteFromConfig(array $opts, ?SshInfo $ssh = null): self
     {
         self::$readFromDotEnv = $opts['readDbConfigFromDotEnv'];
 
@@ -54,7 +54,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         return $model;
     }
 
-    public static function remoteFromSsh(array $config, SshInfo $ssh)
+    public static function remoteFromSsh(array $config, SshInfo $ssh): self
     {
         $remoteWorkingDir = $config['remoteWorkingDir'];
         $cmd = new SetupStep('Get Remote DB Config', ["cd {$remoteWorkingDir}; grep .env -e \"DB_\""]);
@@ -67,7 +67,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         // var_dump($model); die;
     }
 
-    public static function localFromConfig(array $config)
+    public static function localFromConfig(array $config): self
     {
         $localWorkingDir = $config['localWorkingDir'];
         $cmd = new SetupStep('Get Local DB Config', ["cd {$localWorkingDir}; grep .env -e \"DB_\""]);
@@ -77,7 +77,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         return $model;
     }
 
-    private static function fromGrepOutput($output)
+    private static function fromGrepOutput($output): self
     {
         // If successful, the result will look like:
         // DB_DRIVER=xxxx
@@ -123,18 +123,18 @@ class DatabaseInfo extends ValidationModel implements TableView
         return empty($this->errors);
     }
 
-    public function getTempFile(bool $absolute = true, bool $remote = true)
+    public function getTempFile(bool $absolute = true, bool $remote = true): string
     {
         $relative = 'db.sql';
         return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
     }
 
-    public function getTempDir(bool $remote = true)
+    public function getTempDir(bool $remote = true): string
     {
         return '/tmp';
     }
 
-    public function getArchiveFile(bool $absolute = true, bool $remote = true)
+    public function getArchiveFile(bool $absolute = true, bool $remote = true): string
     {
         $relative = 'db.sql.bz2';
         return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;

@@ -40,12 +40,20 @@ class DatabaseSync
         return $scenario->run();
     }
 
+    /**
+     * Return each of the config options without running a sync
+     * @return array{config:array<array-key,mixed>,ssh:SshInfo,remoteDb:DatabaseInfo,localDb:DatabaseInfo}
+     */
     public function dumpConfig(array $config, string $environment)
     {
         [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
         return compact('config', 'ssh', 'remoteDb', 'localDb');
     }
 
+    /**
+     * Return the scenario without running a sync
+     * @return Scenario
+     */
     public function preview(array $config, string $environment): Scenario
     {
         [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
@@ -58,11 +66,14 @@ class DatabaseSync
     }
 
     /**
-     * @return array{array,SshInfo,DatabaseInfo,DatabaseInfo}
+     * @return array{array<array-key,mixed>,SshInfo,DatabaseInfo,DatabaseInfo}
      */
     private static function parseConfigAndDatabases(array $config, string $environment)
     {
         $config = Config::parseConfig($config, $environment);
+        if (!$config) {
+            throw new \Exception('Config is invalid');
+        }
         $ssh = SshInfo::fromConfig($config);
         $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
         $localDb = DatabaseInfo::localFromConfig($config);
@@ -143,7 +154,7 @@ class DatabaseSync
      * @param DatabaseInfo $db
      * @return Scenario
      */
-    public function dumpDatabase(Scenario $scenario, DatabaseInfo $db)
+    private function dumpDatabase(Scenario $scenario, DatabaseInfo $db)
     {
         $driver = strtolower($db->getDriver());
         $this->logger->debug('dumpDatabase - driver: ', ['driver' => $driver]);
@@ -225,7 +236,7 @@ class DatabaseSync
      * @param DatabaseInfo $localDb
      * @return Scenario
      */
-    public function importDatabase(Scenario $scenario, DatabaseInfo $localDb)
+    private function importDatabase(Scenario $scenario, DatabaseInfo $localDb)
     {
         // Setup a config file, used for mysql client
         $setupLocalMysqlCredentials = new SetupStep(
