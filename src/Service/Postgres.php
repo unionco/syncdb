@@ -34,7 +34,7 @@ class Postgres implements DatabaseImplementation
         // Dump the database to a temporary location
         $chainDump = (new ScenarioStep('Postgres Dump', true))
             ->setCommands([
-                "pg_dump -Fc > {$db->getTempFile()}",
+                "pg_dump -Fc {$db->getName()} > {$db->getTempFile()}",
             ]);
         $teardownSql = new TeardownStep(
             'Remove Remote SQL File', ["rm {$db->getTempFile()}"], $chainDump);
@@ -107,7 +107,7 @@ class Postgres implements DatabaseImplementation
         // Import the SQL file using mysql client
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "pg_restore {$db->getTempFile(true, false)}",
+                "pg_restore -d {$db->getName()} {$db->getTempFile(true, false)}",
             ]);
         $scenario->addChainStep($import);
 
