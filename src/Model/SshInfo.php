@@ -79,6 +79,7 @@ class SshInfo extends ValidationModel implements TableView
         }
         $cmd .= " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ";
         // $cmd .= " -- ";
+        $cmd .= ' /bin/bash -C ';
         return $cmd;
     }
 
