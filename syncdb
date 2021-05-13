@@ -16,7 +16,7 @@ $path = '/Users/abry/Union/Sites/craft-plugin-host.com/config/syncdb.php';
 $config = (require $path);
 $config['common']['localWorkingDir'] = '/Users/abry/Union/Sites/craft-plugin-host.com';
 $s = new SyncDb();
-$s->dumpConfig($config, 'production');
+var_dump($s->dumpConfig($config, 'production'));
 
 // $config = Config::parseConfig(SYNCDB_CONFIG_PATH, 'staging');
 
