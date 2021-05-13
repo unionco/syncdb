@@ -10,7 +10,17 @@ use unionco\syncdb\Service\DatabaseSync;
 
 class DatabaseInfo extends ValidationModel implements TableView
 {
-    public static $readFromDotEnv = false;
+    public const OVERRIDE = 'dbOverride';
+    public const DRIVER = 'driver';
+    public const PORT = 'port';
+    public const HOST = 'host';
+    public const USER = 'user';
+    public const NAME = 'name';
+    public const PASS = 'pass';
+    public const ARGS = 'args';
+    public const IGNORE_TABLES = 'ignoreTables';
+
+    // public static $readFromDotEnv = false;
 
     /** @var string */
     protected $driver = 'mysql';
@@ -33,24 +43,24 @@ class DatabaseInfo extends ValidationModel implements TableView
     /** @var string[] */
     protected $ignoreTables = [];
 
+    protected static $overrides = [];
+
     protected $args;
 
     public static function remoteFromConfig(array $opts, ?SshInfo $ssh = null): self
     {
-        self::$readFromDotEnv = $opts['readDbConfigFromDotEnv'];
+        $overrides = [];
+        if (\key_exists(self::OVERRIDE, $opts)) {
+            $overrides = $opts[self::OVERRIDE];
+        }
 
-        if (!self::$readFromDotEnv) {
+        if (!$ssh) {
             $model = new DatabaseInfo();
-            $model->setDriver($opts['driver']);
-            $model->setUser($opts['dbUser']);
-            $model->setPass($opts['dbPass']);
-            $model->setHost($opts['dbHost']);
-            $model->setName($opts['dbName']);
-            $model->setPort($opts['dbPort']);
-            $model->setArgs($opts['dbArgs']);
+            static::setOverrides($overrides);
         } else {
             $model = self::remoteFromSsh($opts, $ssh);
         }
+
         return $model;
     }
 
@@ -63,6 +73,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runRemote($ssh, $cmd);
         $model = self::fromGrepOutput($result);
+        // $model = self::configOverride($model, $config);
         return $model;
         // var_dump($model); die;
     }
@@ -74,6 +85,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runLocal($cmd);
         $model = self::fromGrepOutput($result);
+        // $model = self::configOverride($mode, $config);
         return $model;
     }
 
@@ -92,7 +104,14 @@ class DatabaseInfo extends ValidationModel implements TableView
             'host' => '/^DB_SERVER=(.*)$/m'
         ];
         $model = new DatabaseInfo();
+        $overrides = static::getOverrides();
         foreach ($rules as $handle => $rule) {
+            // If there is an override, use that instead of grep output
+            if (\key_exists($handle, $overrides)) {
+                $model->{$handle} = $overrides[$handle];
+                continue;
+            }
+            // Try to get the value from the grep output
             $matches = [];
             \preg_match_all($rule, $output, $matches, PREG_SET_ORDER, 0);
             // var_dump($matches);
@@ -105,6 +124,17 @@ class DatabaseInfo extends ValidationModel implements TableView
         }
         return $model;
     }
+
+    /**
+     * Set the override attributes on the model, if present.
+     * This is necessary when the remote/local project is running inside a container
+     * and cannot be accessed directly from the credentials in the `.env` file
+     */
+    private static function configOverride(DatabaseInfo $model, array $config)
+    {
+        // if (!\key_exists('dbOverride'))
+    }
+
 
     public function valid(): bool
     {
@@ -311,5 +341,24 @@ class DatabaseInfo extends ValidationModel implements TableView
             $rows[] = [$key, $value];
         }
         return $rows;
+    }
+
+    /**
+     * Get the value of overrides
+     */
+    public static function getOverrides(): array
+    {
+        return static::$overrides;
+    }
+
+    /**
+     * Set the value of overrides
+     *
+     * @return void
+     */
+    public static function setOverrides(array $overrides): void
+    {
+        static::$overrides = $overrides;
+        // return $this;
     }
 }

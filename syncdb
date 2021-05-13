@@ -10,25 +10,30 @@ use unionco\syncdb\Service\DatabaseSync;
 
 require __DIR__ . '/vendor/autoload.php';
 
-define('SYNCDB_CONFIG_PATH', __DIR__ . '/config.json');
+$path = '/Users/abry/Union/Sites/craft-plugin-host.com/config/syncdb.php';
+// define('SYNCDB_CONFIG_PATH', __DIR__ . '/config.json');
 
+$config = (require $path);
+$config['common']['localWorkingDir'] = '/Users/abry/Union/Sites/craft-plugin-host.com';
 $s = new SyncDb();
-$config = Config::parseConfig(SYNCDB_CONFIG_PATH, 'staging');
+$s->dumpConfig($config, 'production');
 
-$ssh = SshInfo::fromConfig($config);
+// $config = Config::parseConfig(SYNCDB_CONFIG_PATH, 'staging');
 
-$remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
-$localDb = DatabaseInfo::localFromConfig($config);
+// $ssh = SshInfo::fromConfig($config);
 
-/** @var DatabaseSync */
-$dbSyncService = SyncDb::$container->get('dbSync');
+// $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
+// $localDb = DatabaseInfo::localFromConfig($config);
 
-$scenario = new Scenario('Sync Database', $ssh);
-$scenario = $dbSyncService->dumpDatabase($scenario, $remoteDb);
+// /** @var DatabaseSync */
+// $dbSyncService = SyncDb::$container->get('dbSync');
 
-$scenario = $dbSyncService->importDatabase($scenario, $localDb);
+// $scenario = new Scenario('Sync Database', $ssh);
+// $scenario = $dbSyncService->dumpDatabase($scenario, $remoteDb);
 
-echo $scenario->preview();
+// $scenario = $dbSyncService->importDatabase($scenario, $localDb);
+
+// echo $scenario->preview();
 // $scenario->run();
 // echo $scenario->preview(); die;
 // SyncDb::$container->get(DatabaseSync::class)->dumpDatabase($ssh, $db);
