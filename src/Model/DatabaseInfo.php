@@ -54,13 +54,14 @@ class DatabaseInfo extends ValidationModel implements TableView
         if (\key_exists(self::OVERRIDE, $opts)) {
             $overrides = $opts[self::OVERRIDE];
         }
+        static::setOverrides($overrides);
 
         if (!$ssh) {
             $model = new DatabaseInfo();
-            static::setOverrides($overrides);
         } else {
             $model = self::remoteFromSsh($opts, $ssh);
         }
+        $model = self::configureOverrides($model);
 
         return $model;
     }
@@ -77,7 +78,7 @@ class DatabaseInfo extends ValidationModel implements TableView
             throw new \Exception('Command failed');
         }
         $model = self::fromGrepOutput($result);
-        $model = self::setOverrides($model, $config);
+        $model = self::configureOverrides($model, $config);
         // $model = self::configOverride($model, $config);
         return $model;
         // var_dump($model); die;
@@ -90,7 +91,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runLocal($cmd);
         $model = self::fromGrepOutput($result);
-        // $model = self::configOverride($mode, $config);
+        $model = self::configureOverrides($model, $config);
         return $model;
     }
 
@@ -136,13 +137,14 @@ class DatabaseInfo extends ValidationModel implements TableView
      * This is necessary when the remote/local project is running inside a container
      * and cannot be accessed directly from the credentials in the `.env` file
      */
-    private static function setOverrides(DatabaseInfo $model, array $config)
+    private static function configureOverrides(DatabaseInfo $model)
     {
         // if (!\key_exists('dbOverride'))
         $overrides = static::getOverrides();
         foreach ($overrides as $handle => $value) {
             $model->set{ucFirst($handle)}($value);
         }
+        return $model;
     }
 
 
