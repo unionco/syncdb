@@ -7,6 +7,7 @@ use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\TableView;
 use unionco\syncdb\Service\DatabaseSync;
+use Exception;
 
 class DatabaseInfo extends ValidationModel implements TableView
 {
@@ -72,7 +73,11 @@ class DatabaseInfo extends ValidationModel implements TableView
         /** @var DatabaseSync */
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runRemote($ssh, $cmd);
+        if (!$result) {
+            throw new \Exception('Command failed');
+        }
         $model = self::fromGrepOutput($result);
+        $model = self::setOverrides($model, $config);
         // $model = self::configOverride($model, $config);
         return $model;
         // var_dump($model); die;
@@ -89,7 +94,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         return $model;
     }
 
-    private static function fromGrepOutput($output): self
+    private static function fromGrepOutput(string $output): self
     {
         // If successful, the result will look like:
         // DB_DRIVER=xxxx
@@ -104,13 +109,14 @@ class DatabaseInfo extends ValidationModel implements TableView
             'host' => '/^DB_SERVER=(.*)$/m'
         ];
         $model = new DatabaseInfo();
-        $overrides = static::getOverrides();
+        // $overrides = static::getOverrides();
+
         foreach ($rules as $handle => $rule) {
             // If there is an override, use that instead of grep output
-            if (\key_exists($handle, $overrides)) {
-                $model->{$handle} = $overrides[$handle];
-                continue;
-            }
+            // if (\key_exists($handle, $overrides)) {
+            //     $model->{$handle} = $overrides[$handle];
+            //     continue;
+            // }
             // Try to get the value from the grep output
             $matches = [];
             \preg_match_all($rule, $output, $matches, PREG_SET_ORDER, 0);
@@ -130,9 +136,13 @@ class DatabaseInfo extends ValidationModel implements TableView
      * This is necessary when the remote/local project is running inside a container
      * and cannot be accessed directly from the credentials in the `.env` file
      */
-    private static function configOverride(DatabaseInfo $model, array $config)
+    private static function setOverrides(DatabaseInfo $model, array $config)
     {
         // if (!\key_exists('dbOverride'))
+        $overrides = static::getOverrides();
+        foreach ($overrides as $handle => $value) {
+            $model->set{ucFirst($handle)}($value);
+        }
     }
 
 
