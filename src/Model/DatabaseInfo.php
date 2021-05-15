@@ -3,13 +3,13 @@
 namespace unionco\syncdb\Model;
 
 use Exception;
-use unionco\syncdb\SyncDb;
-use unionco\syncdb\Model\SshInfo;
-use unionco\syncdb\Service\Config;
-use unionco\syncdb\Model\SetupStep;
-use unionco\syncdb\Model\TableView;
-use unionco\syncdb\Service\DatabaseSync;
 use unionco\syncdb\Model\DockerDatabaseInfo;
+use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Model\SshInfo;
+use unionco\syncdb\Model\TableView;
+use unionco\syncdb\Service\Config;
+use unionco\syncdb\Service\DatabaseSync;
+use unionco\syncdb\SyncDb;
 
 class DatabaseInfo extends ValidationModel implements TableView
 {
@@ -65,7 +65,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         // }
         // static::setOverrides($overrides);
         $model = self::remoteFromSsh($opts, $ssh);
-        $model = self::configureOverrides($model);
+        // $model = self::configureOverrides($model);
 
         return $model;
     }
@@ -86,7 +86,6 @@ class DatabaseInfo extends ValidationModel implements TableView
         if (!$result) {
             throw new \Exception('Command failed');
         }
-
 
         // Consider if the remote configuration uses docker
         // (and may need alternate hosts/ports to be reached outside
@@ -146,7 +145,6 @@ class DatabaseInfo extends ValidationModel implements TableView
         }
         return $model;
     }
-
 
     public function valid(): bool
     {
