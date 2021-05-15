@@ -35,11 +35,15 @@ class Postgres extends AbstractDatabaseImplementation
 
     public static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
     {
-        $dbName = $db->getName();
+        $name = $db->getName();
+        $host = $db->getHost();
+        $port = $db->getPort();
+        $user = $db->getUser();
+
         $remoteDumpTarget = $db->getTempFile(true, true);
         $dump = (new ScenarioStep('Postgres Dump', true))
             ->setCommands([
-                "pg_dump -Fc {$dbName} > {$remoteDumpTarget}",
+                "pg_dump -Fc -d {$name} -U {$user} -h {$host} -p {$port} > {$remoteDumpTarget}",
             ]);
         $teardown = new TeardownStep(
             'Remove Remote SQL File', ["rm {$remoteDumpTarget}"], $dump);
@@ -50,11 +54,15 @@ class Postgres extends AbstractDatabaseImplementation
 
     public static function import(Scenario $scenario, DatabaseInfo $db): Scenario
     {
-        $dbName = $db->getName();
+        $name = $db->getName();
+        $host = $db->getHost();
+        $port = $db->getPort();
+        $user = $db->getUser();
+
         $localDump = $db->getTempFile(true, false);
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "pg_restore -d {$dbName} {$localDump}",
+                "pg_restore -d {$name} -U {$user} -h {$host} -p {$port} {$localDump}",
             ]);
         return $scenario->addChainStep($import);
     }
