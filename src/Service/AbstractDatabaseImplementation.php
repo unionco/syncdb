@@ -33,13 +33,13 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
     public static function importDatabase(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         // Setup a config file, used for mysql client
-        $scenario = self::credentials($scenario, $db, false);
+        $scenario = static::credentials($scenario, $db, false);
 
         // Unarchive the file that was downloaded
-        $scenario = self::unarchive($scenario, $db);
+        $scenario = static::unarchive($scenario, $db);
 
         // Import the SQL file using mysql client
-        $scnario = self::import($scenario, $db);
+        $scnario = static::import($scenario, $db);
 
         return $scenario;
     }
