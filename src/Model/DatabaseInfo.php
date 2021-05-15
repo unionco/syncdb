@@ -176,7 +176,11 @@ class DatabaseInfo extends ValidationModel implements TableView
             default:
                 throw new \Exception('Invalid driver');
         }
-        return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
+        if ($absolute) {
+            $tempDir = $this->getTempDir($remote);
+            return "{$tempDir}/{$relative}";
+        }
+        return $relative;
     }
 
     public function getTempDir(bool $remote = true): string
@@ -186,8 +190,8 @@ class DatabaseInfo extends ValidationModel implements TableView
 
     public function getArchiveFile(bool $absolute = true, bool $remote = true): string
     {
-        $relative = $this->getTempFile($absolute, $remote) . '.bz2';
-        return $absolute ? ($this->getTempDir($remote) . '/' . $relative) : $relative;
+        $tempFile = $this->getTempFile($absolute, $remote);
+        return "{$tempFile}.bz2";
     }
 
     public function getDriver(): string
