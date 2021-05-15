@@ -17,7 +17,7 @@ class Postgres extends AbstractDatabaseImplementation
     private const CREDENTIALS_FILE_BACKUP = '~/.pgpass.bak';
 
          /** @inheritdoc */
-    protected static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
+    public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
     {
         $remoteString = $remote ? 'Remote' : 'Local';
         $setup = new SetupStep(
@@ -33,7 +33,7 @@ class Postgres extends AbstractDatabaseImplementation
             ->addTeardownStep($teardown);
     }
 
-    protected static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $dbName = $db->getName();
         $remoteDumpTarget = $db->getTempFile(true, true);
@@ -48,7 +48,7 @@ class Postgres extends AbstractDatabaseImplementation
             ->addTeardownStep($teardown);
     }
 
-    protected static function import(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function import(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $dbName = $db->getName();
         $localDump = $db->getTempFile(true, false);

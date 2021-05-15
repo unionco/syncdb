@@ -30,15 +30,15 @@ interface DatabaseImplementation
     public static function teardownCredentialsCommands();
 
     /** @return Scenario */
-    protected static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario;
+    public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario;
     /** @return Scenario */
-    protected static function dump(Scenario $scenario, DatabaseInfo $db): Scenario;
+    public static function dump(Scenario $scenario, DatabaseInfo $db): Scenario;
     /** @return Scenario */
-    protected static function archive(Scenario $scenario, DatabaseInfo $db): Scenario;
+    public static function archive(Scenario $scenario, DatabaseInfo $db): Scenario;
     /** @return Scenario */
-    protected static function download(Scenario $scenario, DatabaseInfo $db, SshInfo $ssh): Scenario;
+    public static function download(Scenario $scenario, DatabaseInfo $db, SshInfo $ssh): Scenario;
     /** @return Scenario */
-    protected static function unarchive(Scenario $scenario, DatabaseInfo $db): Scenario;
+    public static function unarchive(Scenario $scenario, DatabaseInfo $db): Scenario;
     /** @return Scenario */
-    protected static function import(Scenario $scenario, DatabaseInfo $db): Scenario;
+    public static function import(Scenario $scenario, DatabaseInfo $db): Scenario;
 }

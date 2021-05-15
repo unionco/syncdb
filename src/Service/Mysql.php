@@ -15,7 +15,7 @@ class Mysql implements DatabaseImplementation
     private const CREDENTIALS_PATH = '~/.mysql';
     private const CREDENTIALS_FILE = '~/.mysql/syncdb.cnf';
 
-    protected static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
+    public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
     {
         $remoteString = $remote ? 'Remote' : 'Local';
         $setup = new SetupStep(
@@ -31,7 +31,7 @@ class Mysql implements DatabaseImplementation
             ->addTeardownStep($teardown);
     }
 
-    protected static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $host = $db->getHost();
         $port = $db->getPort();
@@ -49,7 +49,7 @@ class Mysql implements DatabaseImplementation
             ->addTeardownStep($teardown);
     }
 
-    protected static function import(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function import(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $host = $db->getHost();
         $port = $db->getPort();

@@ -44,7 +44,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         return $scenario;
     }
 
-    protected static function archive(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function archive(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         /** @var string /tmp/db.dump.bz2 */
         $remoteArchiveTarget = $db->getArchiveFile(true, true);
@@ -66,7 +66,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ->addTeardownStep($teardown);
     }
 
-    protected static function download(Scenario $scenario, DatabaseInfo $db, SshInfo $ssh): Scenario
+    public static function download(Scenario $scenario, DatabaseInfo $db, SshInfo $ssh): Scenario
     {
         $remoteDownloadSource = $db->getArchiveFile(true, true);
         $localDownloadTarget = $db->getArchiveFile(true, false);
@@ -87,7 +87,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ->addTeardownStep($teardownDownload);
     }
 
-    protected static function unarchive(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function unarchive(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $localTempDir = $db->getTempDir(false);
 
@@ -105,7 +105,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ->addTeardownStep($removeSqlFile);
     }
 
-    protected static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
+    public static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         return $scenario;
     }
