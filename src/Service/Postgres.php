@@ -72,13 +72,9 @@ class Postgres extends AbstractDatabaseImplementation
      */
     public static function setupCredentialsCommands(DatabaseInfo $db, bool $dump = true)
     {
-        $host = $db->getHost();
-        $port = $db->getPort();
-        $name = $db->getName();
-        $user = $db->getUser();
         $pass = $db->getPass();
 
-        $connectionString = "{$host}:{$port}:{$name}:{$user}:{$pass}";
+        $connectionString = "*:*:*:*:{$pass}";
         return [
             "/bin/sh -c \"if test -f " . self::CREDENTIALS_FILE . "; then chmod 0700 " . self::CREDENTIALS_FILE . "; mv " . self::CREDENTIALS_FILE . " " . self::CREDENTIALS_FILE_BACKUP . "; else touch " . self::CREDENTIALS_FILE . "; fi\"",
             "echo {$connectionString} > " . self::CREDENTIALS_FILE . "",
