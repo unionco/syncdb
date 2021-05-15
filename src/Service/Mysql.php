@@ -2,11 +2,12 @@
 
 namespace unionco\syncdb\Service;
 
-use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\Scenario;
-use unionco\syncdb\Model\ScenarioStep;
 use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Model\DatabaseInfo;
+use unionco\syncdb\Model\ScenarioStep;
 use unionco\syncdb\Model\TeardownStep;
+use unionco\syncdb\Service\DatabaseSync;
 use unionco\syncdb\Service\DatabaseImplementation;
 
 class Mysql implements DatabaseImplementation

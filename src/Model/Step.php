@@ -2,6 +2,8 @@
 
 namespace unionco\syncdb\Model;
 
+use unionco\syncdb\Service\DatabaseSync;
+
 abstract class Step
 {
     public static $nextId = 1;
@@ -63,22 +65,23 @@ abstract class Step
         return $this->commands;
     }
 
-    public function getCommandString($ssh = null)
+    public function getCommandString(SshInfo $ssh = null, bool $scramble = false): string
     {
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
-        if (!$this->remote || !$ssh) {
-            // $cmd;
-        } else {
+        if ($this->remote && $ssh) {
             $cmd = "{$ssh->getCommandPrefix()} '$cmd'";
         }
         if ($this->ignoreWarnings) {
             $cmd .= " 2>/dev/null";
         }
+        if ($scramble) {
+            return DatabaseSync::scramble($cmd);
+        }
         return $cmd;
 
     }
 
-    protected function setId()
+    protected function setId(): void
     {
         $this->id = static::$nextId;
         static::$nextId++;

@@ -19,9 +19,20 @@ class DatabaseSync
 {
     private $logger;
 
+    /**
+     * Maintain a list of strings that should not show up in logs/CLI
+     * @var string[]
+     */
+    private static $stringsToScramble = [];
+
     public function __construct(Logger $logger)
     {
         $this->logger = $logger;
+    }
+
+    public static function addStringToScramble(string $string)
+    {
+        static::$stringsToScramble[] = $string;
     }
 
     /**
@@ -71,13 +82,27 @@ class DatabaseSync
      */
     private static function parseConfigAndDatabases(array $config, string $environment)
     {
-        $config = Config::parseConfig($config, $environment);
-        if (!$config) {
-            throw new \Exception('Config is invalid');
+        [
+            'remote' => $remoteConfig,
+            'local' => $localConfig,
+        ] = Config::parseConfig($config, $environment);
+
+        // var_dump($config); die;
+        if (!$remoteConfig) {
+            throw new \Exception('Remote Config is invalid');
+        } elseif (!$localConfig) {
+            throw new \Exception('Local Config is invalid');
         }
-        $ssh = SshInfo::fromConfig($config);
-        $remoteDb = DatabaseInfo::remoteFromConfig($config, $ssh);
-        $localDb = DatabaseInfo::localFromConfig($config);
+
+        $ssh = SshInfo::fromConfig($remoteConfig);
+        $remoteDb = DatabaseInfo::remoteFromConfig($remoteConfig, $ssh);
+        $localDb = DatabaseInfo::localFromConfig($localConfig);
+
+        $remoteDbPassword = $remoteDb->getPass();
+        DatabaseSync::addStringToScramble($remoteDbPassword);
+        $localDbPassword = $localDb->getPass();
+        DatabaseSync::addStringToScramble($localDbPassword);
+
 
         return [$config, $ssh, $remoteDb, $localDb];
     }
@@ -93,7 +118,7 @@ class DatabaseSync
         $cmd = $step->getCommandString($ssh);
         $this->logger->info(__METHOD__, [
             'name' => $step->getName(),
-            'commandString' => $cmd,
+            'commandString' => static::scramble($cmd),
         ]);
 
         $proc = Process::fromShellCommandline($cmd);
@@ -157,6 +182,7 @@ class DatabaseSync
      */
     private function dumpDatabase(Scenario $scenario, DatabaseInfo $db)
     {
+
         $driver = $db->getDriver();
         $this->logger->debug('dumpDatabase - driver: ', ['driver' => $driver]);
 
@@ -198,5 +224,16 @@ class DatabaseSync
         }
 
         return $scenario;
+    }
+
+    public static function scramble(string $text): string
+    {
+        $output = $text;
+        foreach (static::$stringsToScramble as $pattern) {
+            $len = \strlen($pattern);
+            $replace = \str_repeat("*", $len);
+            $output = \str_replace($pattern, $replace, $output);
+        }
+        return $output;
     }
 }

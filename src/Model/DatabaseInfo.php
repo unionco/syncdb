@@ -2,15 +2,20 @@
 
 namespace unionco\syncdb\Model;
 
+use Exception;
 use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\SshInfo;
+use unionco\syncdb\Service\Config;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\TableView;
 use unionco\syncdb\Service\DatabaseSync;
-use Exception;
+use unionco\syncdb\Model\DockerDatabaseInfo;
 
 class DatabaseInfo extends ValidationModel implements TableView
 {
+    public const MYSQL = 'mysql';
+    public const POSTGRES = 'pgsql';
+
     public const OVERRIDE = 'dbOverride';
     public const DRIVER = 'driver';
     public const PORT = 'port';
@@ -48,24 +53,27 @@ class DatabaseInfo extends ValidationModel implements TableView
 
     protected $args;
 
-    public static function remoteFromConfig(array $opts, ?SshInfo $ssh = null): self
+    /**
+     * Parse an array of configuration options into a DatabaseInfo (or child class) object
+     * This method explicitly parses commands for a remote environment
+     */
+    public static function remoteFromConfig(array $opts, SshInfo $ssh): self
     {
-        $overrides = [];
-        if (\key_exists(self::OVERRIDE, $opts)) {
-            $overrides = $opts[self::OVERRIDE];
-        }
-        static::setOverrides($overrides);
-
-        if (!$ssh) {
-            $model = new DatabaseInfo();
-        } else {
-            $model = self::remoteFromSsh($opts, $ssh);
-        }
+        // $overrides = [];
+        // if (\key_exists(self::OVERRIDE, $opts)) {
+        //     $overrides = $opts[self::OVERRIDE];
+        // }
+        // static::setOverrides($overrides);
+        $model = self::remoteFromSsh($opts, $ssh);
         $model = self::configureOverrides($model);
 
         return $model;
     }
 
+    /**
+     * Run commands on the remote server (based on the configuration options)
+     * to determine the remote database connection
+     */
     public static function remoteFromSsh(array $config, SshInfo $ssh): self
     {
         $remoteWorkingDir = $config['remoteWorkingDir'];
@@ -73,15 +81,30 @@ class DatabaseInfo extends ValidationModel implements TableView
 
         /** @var DatabaseSync */
         $service = SyncDb::$container->get('dbSync');
+
         $result = $service->runRemote($ssh, $cmd);
         if (!$result) {
             throw new \Exception('Command failed');
         }
+
+
+        // Consider if the remote configuration uses docker
+        // (and may need alternate hosts/ports to be reached outside
+        // of the container)
+        $dockerOverride = false;
+        if ($config[Config::C_DOCKER] === true) {
+            [
+                'host' => $host,
+                'port' => $port,
+            ] = $config[Config::C_DOCKER_DB];
+            $dockerOverride = true;
+            $model = DockerDatabaseInfo::fromGrepOutput($result);
+            $model->setHost($host);
+            $model->setPort($port);
+            return $model;
+        }
         $model = self::fromGrepOutput($result);
-        $model = self::configureOverrides($model, $config);
-        // $model = self::configOverride($model, $config);
         return $model;
-        // var_dump($model); die;
     }
 
     public static function localFromConfig(array $config): self
@@ -91,11 +114,11 @@ class DatabaseInfo extends ValidationModel implements TableView
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runLocal($cmd);
         $model = self::fromGrepOutput($result);
-        $model = self::configureOverrides($model, $config);
+
         return $model;
     }
 
-    private static function fromGrepOutput(string $output): self
+    public static function fromGrepOutput(string $output): self
     {
         // If successful, the result will look like:
         // DB_DRIVER=xxxx
@@ -107,42 +130,19 @@ class DatabaseInfo extends ValidationModel implements TableView
             'pass' => '/^DB_PASSWORD=(.*)$/m',
             'name' => '/^DB_DATABASE=(.*)$/m',
             'port' => '/^DB_PORT=(.*)$/m',
-            'host' => '/^DB_SERVER=(.*)$/m'
+            'host' => '/^DB_SERVER=(.*)$/m',
         ];
-        $model = new DatabaseInfo();
-        // $overrides = static::getOverrides();
+        $model = new self();
 
         foreach ($rules as $handle => $rule) {
-            // If there is an override, use that instead of grep output
-            // if (\key_exists($handle, $overrides)) {
-            //     $model->{$handle} = $overrides[$handle];
-            //     continue;
-            // }
-            // Try to get the value from the grep output
             $matches = [];
             \preg_match_all($rule, $output, $matches, PREG_SET_ORDER, 0);
-            // var_dump($matches);
             if ($matches) {
                 $model->{$handle} = $matches[0][1];
             }
         }
         if (!$model->valid()) {
-             throw new \Exception('DB config is invalid');
-        }
-        return $model;
-    }
-
-    /**
-     * Set the override attributes on the model, if present.
-     * This is necessary when the remote/local project is running inside a container
-     * and cannot be accessed directly from the credentials in the `.env` file
-     */
-    private static function configureOverrides(DatabaseInfo $model)
-    {
-        // if (!\key_exists('dbOverride'))
-        $overrides = static::getOverrides();
-        foreach ($overrides as $handle => $value) {
-            $model->set{ucFirst($handle)}($value);
+            throw new \Exception('DB config is invalid');
         }
         return $model;
     }
