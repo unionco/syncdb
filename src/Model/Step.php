@@ -75,14 +75,15 @@ abstract class Step
             // $cmd = str_replace('"', '\"', $cmd);
 
             // $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
+            if ($this->ignoreWarnings) {
+                $cmd .= " 2>/dev/null";
+            }
+
             $cmd = <<<EOFPHP
 {$ssh->getCommandPrefix()} /bin/sh << EOF
 {$cmd}
 EOF
 EOFPHP;
-        }
-        if ($this->ignoreWarnings) {
-            $cmd .= " 2>/dev/null";
         }
         if ($scramble) {
             return DatabaseSync::scramble($cmd);
