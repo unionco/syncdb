@@ -47,7 +47,7 @@ class Logger
             //         $this->ml->error($e->getMessage());
             //     }
 
-            }
+            // }
             try {
                 $this->ml->{$name}($args[0]);
             } catch (\Throwable $e) {
