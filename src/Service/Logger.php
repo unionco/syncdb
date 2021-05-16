@@ -4,9 +4,11 @@ namespace unionco\syncdb\Service;
 
 use Monolog\Logger as ML;
 use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
 
 class Logger
 {
+    /** @var null|ML */
     private $ml;
 
     public function __construct()
@@ -14,7 +16,10 @@ class Logger
         if (class_exists('Monolog\Logger')) {
             // $this->logger = new Logger()
             $this->ml = new ML('default');
-            $this->ml->pushHandler(new StreamHandler('php://stdout', ML::DEBUG));
+            $stdoutHandler = new StreamHandler('php://stdout', ML::DEBUG);
+            $stdoutHandler->setFormatter(new LineFormatter());
+            // $fileHandler = new StreamHandler('/tmp/syncdb.log')
+            $this->ml->pushHandler($stdoutHandler);
         }
     }
 

@@ -14,7 +14,7 @@ use unionco\syncdb\Service\AbstractDatabaseImplementation;
 class Postgres extends AbstractDatabaseImplementation
 {
     private const CREDENTIALS_FILE = '~/.pgpass';
-    private const CREDENTIALS_FILE_BACKUP = '~/.pgpass.bak';
+    private const CREDENTIALS_FILE_BACKUP = '/.pgpass.bak';
 
          /** @inheritdoc */
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
@@ -62,7 +62,7 @@ class Postgres extends AbstractDatabaseImplementation
         $localDump = $db->getTempFile(true, false);
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "pg_restore -d {$name} -U {$user} -h {$host} -p {$port} {$localDump}",
+                "pg_restore -c -W -d {$name} -U {$user} -h {$host} -p {$port} {$localDump}",
             ]);
         return $scenario->addChainStep($import);
     }
@@ -83,8 +83,6 @@ if [ -f {$credentialsFile} ]
 then
   chmod 0700 {$credentialsFile}
   mv {$credentialsFile} {$credentialsBackup}
-else
-  touch {$credentialsFile}
 fi
 EOFPHP;
 
