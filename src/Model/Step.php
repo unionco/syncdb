@@ -68,11 +68,12 @@ abstract class Step
     public function getCommandString(SshInfo $ssh = null, bool $scramble = false): string
     {
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
-        // escape quotes
-        $cmd = str_replace("'", '\'', $cmd);
-        $cmd = str_replace('"', '\"', $cmd);
 
         if ($this->remote && $ssh) {
+            // escape quotes
+            $cmd = str_replace("'", '\'', $cmd);
+            $cmd = str_replace('"', '\"', $cmd);
+
             $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
         }
         if ($this->ignoreWarnings) {
