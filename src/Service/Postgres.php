@@ -66,7 +66,7 @@ class Postgres extends AbstractDatabaseImplementation
         $localDump = $db->getTempFile(true, false);
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "dropdb {$pgsqlCreds} {$name}",
+                "dropdb --force {$pgsqlCreds} {$name}",
                 "createdb {$pgsqlCreds} {$name}",
                 "pg_restore --clean --if-exists --no-password -e -d {$name} {$pgsqlCreds} {$localDump}",
             ]);
