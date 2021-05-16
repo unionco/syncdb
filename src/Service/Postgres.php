@@ -64,7 +64,7 @@ class Postgres extends AbstractDatabaseImplementation
         $localDump = $db->getTempFile(true, false);
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "pg_restore -c -w -e -d {$name} -U {$user} -h {$host} -p {$port} {$localDump}",
+                "pg_restore --clean --if-exists --no-password -e -d {$name} -U {$user} -h {$host} -p {$port} {$localDump}",
             ]);
         return $scenario->addChainStep($import);
     }
