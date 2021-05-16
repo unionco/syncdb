@@ -102,11 +102,15 @@ class SshInfo extends ValidationModel implements TableView
         if ($i) {
             $cmd .= "-i {$i} ";
         }
+
+        $cmd .= ' -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ';
+
         if ($u) {
             $cmd .= "{$u}@{$h}:{$remote} ";
         } else {
             $cmd .= "{$h}:{$remote} ";
         }
+
         return $cmd . " $local";
     }
 
