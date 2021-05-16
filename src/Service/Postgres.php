@@ -102,8 +102,15 @@ EOFPHP;
     {
         $credentialsFile = self::CREDENTIALS_FILE;
         $credentialsBackup = self::CREDENTIALS_FILE_BACKUP;
+        $credsFileConditional = <<<EOFPHP
+if [ -f {$credentialsBackup} ]
+then
+  mv {$credentialsBackup} {$credentialsFile}
+  chmod 0600 {$credentialsFile}
+fi
+EOFPHP;
         return [
-            "if [ -f {$credentialsBackup} ]; then mv {$credentialsBackup} {$credentialsFile}; chmod 0600 {$credentialsFile}; fi",
+            $credsFileConditional
         ];
     }
 }

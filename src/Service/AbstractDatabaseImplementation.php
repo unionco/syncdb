@@ -54,7 +54,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
 
         $chain = (new ScenarioStep('Archive', true))
             ->setCommands([
-                "tar cvjf {$remoteArchiveTarget} -C {$remoteTempDir} {$remoteTempDump}",
+                "tar -cvjf {$remoteArchiveTarget} -C {$remoteTempDir} {$remoteTempDump}",
             ]);
         if (!$chain) {
             throw new \Exception('Invalid step');
@@ -91,7 +91,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
     {
         $localTempDir = $db->getTempDir(false);
 
-        $localArchive = $db->getArchiveFile(false, false);
+        $localArchive = $db->getArchiveFile(true, false);
         $localTempFile = $db->getTempFile(true, false);
 
         $localUnarchive = (new ScenarioStep('Unarchive Local SQL file', false))
