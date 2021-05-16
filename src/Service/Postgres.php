@@ -22,12 +22,14 @@ class Postgres extends AbstractDatabaseImplementation
         $remoteString = $remote ? 'Remote' : 'Local';
         $setup = new SetupStep(
             "Setup {$remoteString} Postgres Credentials",
-            self::setupCredentialsCommands($db, $remote)
+            self::setupCredentialsCommands($db),
+            $remote
         );
         $teardown = new TeardownStep(
             "Teardown {$remoteString} Postgres Credentials",
             self::teardownCredentialsCommands(),
-            $setup
+            $setup,
+            $remote
         );
         return $scenario->addSetupStep($setup)
             ->addTeardownStep($teardown);

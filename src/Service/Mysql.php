@@ -20,12 +20,14 @@ class Mysql implements DatabaseImplementation
         $remoteString = $remote ? 'Remote' : 'Local';
         $setup = new SetupStep(
             "Setup {$remoteString} MySQL Credentials",
-            self::setupCredentialsCommands($db, $remote)
+            self::setupCredentialsCommands($db, $remote),
+            $remote
         );
         $teardown = new TeardownStep(
             "Teardown {$remoteString} MySQL Credentials",
             self::teardownCredentialsCommands(),
-            $setup
+            $setup,
+            $remote
         );
         return $scenario->addSetupStep($setup)
             ->addTeardownStep($teardown);
