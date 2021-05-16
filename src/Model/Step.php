@@ -73,7 +73,7 @@ abstract class Step
         $cmd = str_replace('"', '\"', $cmd);
 
         if ($this->remote && $ssh) {
-            $cmd = "{$ssh->getCommandPrefix()} " . '"' . $cmd . '"';
+            $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
         }
         if ($this->ignoreWarnings) {
             $cmd .= " 2>/dev/null";
