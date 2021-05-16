@@ -41,9 +41,11 @@ class Mysql extends AbstractDatabaseImplementation
         $name = $db->getname();
         $remoteTempDump = $db->getTempFile(true, true);
 
+        $credentialsFile = self::CREDENTIALS_FILE;
+
         $dump = (new ScenarioStep('MySQL Dump', true))
             ->setCommands([
-                "mysqldump --defaults-extra-file=" . self::CREDENTIALS_FILE . " -h {$host} -P {$port} {$name} > {$remoteTempDump}",
+                "mysqldump --defaults-extra-file={$credentialsFile} --no-tablespaces -h {$host} -P {$port} {$name} > {$remoteTempDump}",
             ]);
         $teardown = new TeardownStep(
             'Remove Remote SQL File', ["rm {$db->getTempFile()}"], $dump);
