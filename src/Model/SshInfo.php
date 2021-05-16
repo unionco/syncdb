@@ -78,12 +78,12 @@ class SshInfo extends ValidationModel implements TableView
             $cmd .= " -i {$i}";
         }
         $cmd .= " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ";
-        $cmdMultiline = <<<EOFPHP
-/bin/sh << EOF
-$cmd
-EOF
-EOFPHP;
-        $cmd .= $cmdMultiline;
+//         $cmdMultiline = <<<EOFPHP
+// /bin/sh << EOF
+// $cmd
+// EOF
+// EOFPHP;
+        // $cmd .= $cmdMultiline;
         // $cmd .= ' /bin/bash -c ';
         return $cmd;
     }

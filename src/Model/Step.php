@@ -75,7 +75,11 @@ abstract class Step
             // $cmd = str_replace('"', '\"', $cmd);
 
             // $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
-            $cmd = "{$ssh->getCommandPrefix()} {$cmd}";
+            $cmd = <<<EOFPHP
+{$ssh->getCommandPrefix()} /bin/sh << EOF
+{$cmd}
+EOF
+EOFPHP;
         }
         if ($this->ignoreWarnings) {
             $cmd .= " 2>/dev/null";
