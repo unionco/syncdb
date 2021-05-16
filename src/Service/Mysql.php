@@ -13,8 +13,8 @@ use unionco\syncdb\Service\AbstractDatabaseImplementation;
 
 class Mysql extends AbstractDatabaseImplementation
 {
-    private const CREDENTIALS_PATH = '$HOME/.mysql';
-    private const CREDENTIALS_FILE = '$HOME/.mysql/syncdb.cnf';
+    private const CREDENTIALS_PATH = '~/.mysql';
+    private const CREDENTIALS_FILE = '~/.mysql/syncdb.cnf';
 
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
     {
