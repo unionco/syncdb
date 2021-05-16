@@ -117,6 +117,9 @@ class DatabaseInfo extends ValidationModel implements TableView
         return $model;
     }
 
+    /**
+     * Set db params based on the output of `grep .env -e 'DB_'`
+     */
     public static function fromGrepOutput(string $output): self
     {
         // If successful, the result will look like:

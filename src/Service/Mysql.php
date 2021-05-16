@@ -2,15 +2,16 @@
 
 namespace unionco\syncdb\Service;
 
-use unionco\syncdb\Model\DatabaseInfo;
-use unionco\syncdb\Model\Scenario;
-use unionco\syncdb\Model\ScenarioStep;
-use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\Step;
+use unionco\syncdb\Model\Scenario;
+use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Model\DatabaseInfo;
+use unionco\syncdb\Model\ScenarioStep;
 use unionco\syncdb\Model\TeardownStep;
 use unionco\syncdb\Service\DatabaseImplementation;
+use unionco\syncdb\Service\AbstractDatabaseImplementation;
 
-class Mysql implements DatabaseImplementation
+class Mysql extends AbstractDatabaseImplementation
 {
     private const CREDENTIALS_PATH = '$HOME/.mysql';
     private const CREDENTIALS_FILE = '$HOME/.mysql/syncdb.cnf';
