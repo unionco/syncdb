@@ -116,10 +116,7 @@ class DatabaseSync
     public function runRemote(SshInfo $ssh, Step $step)
     {
         $cmd = $step->getCommandString($ssh);
-        $this->logger->info(__METHOD__, [
-            'name' => $step->getName(),
-            'commandString' => static::scramble($cmd),
-        ]);
+        $this->logger->info(static::scramble($cmd));
 
         $proc = Process::fromShellCommandline($cmd);
 
@@ -136,7 +133,7 @@ class DatabaseSync
             return false;
         }
         $output = $proc->getOutput();
-        $this->logger->debug(__METHOD__, ['output' => $output]);
+        $this->logger->debug($output);
         return $output;
     }
 
@@ -150,10 +147,7 @@ class DatabaseSync
     public function runLocal(Step $step)
     {
         $cmd = $step->getCommandString();
-        $this->logger->info(__METHOD__, [
-            'name' => $step->getName(),
-            'commandString' => $cmd
-        ]);
+        $this->logger->info($cmd);
 
         $proc = Process::fromShellCommandline($cmd);
 
@@ -170,7 +164,7 @@ class DatabaseSync
             return false;
         }
         $output = $proc->getOutput();
-        $this->logger->debug(__METHOD__, ['output' => $output]);
+        $this->logger->debug($output);
         return $output;
     }
 
