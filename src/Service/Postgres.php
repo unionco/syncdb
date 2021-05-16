@@ -78,10 +78,21 @@ class Postgres extends AbstractDatabaseImplementation
         $credentialsFile = self::CREDENTIALS_FILE;
         $credentialsBackup = self::CREDENTIALS_FILE_BACKUP;
 
+        $credsFileConditional = <<<EOFPHP
+if [ -f {$credentialsFile} ]
+then
+  chmod 0700 {$credentialsFile}
+  mv {$credentialsFile} {$credentialsBackup}
+else
+  touch {$credentialsFile}
+fi
+EOFPHP;
+
         return [
-            "if [ -f {$credentialsFile} ]; then chmod 0700 {$credentialsFile}; mv {$credentialsFile} {$credentialsBackup}; else touch {$credentialsFile}; fi",
+            // "if [ -f {$credentialsFile} ]; then chmod 0700 {$credentialsFile}; mv {$credentialsFile} {$credentialsBackup}; else touch {$credentialsFile}; fi",
+            $credsFileConditional,
             "echo {$connectionString} > {$credentialsFile}",
-            "chmod 0600 {$connectionString}",
+            "chmod 0600 {$credentialsFile}",
         ];
     }
 
