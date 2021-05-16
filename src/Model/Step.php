@@ -69,11 +69,11 @@ abstract class Step
     {
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
         // escape quotes
-        $cmd = str_replace("'", "\'", $cmd);
-        $cmd = str_replace('"', '\"', $cmd);
+        $cmd = str_replace("'", "\\\'", $cmd);
+        $cmd = str_replace('"', '\\\"', $cmd);
 
         if ($this->remote && $ssh) {
-            $cmd = "{$ssh->getCommandPrefix()} \"$cmd\"";
+            $cmd = "{$ssh->getCommandPrefix()} \\\"$cmd\\\"";
         }
         if ($this->ignoreWarnings) {
             $cmd .= " 2>/dev/null";
