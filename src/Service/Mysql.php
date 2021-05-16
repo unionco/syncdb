@@ -16,6 +16,11 @@ class Mysql extends AbstractDatabaseImplementation
     private const CREDENTIALS_PATH = '~/.mysql';
     private const CREDENTIALS_FILE = '~/.mysql/syncdb.cnf';
 
+    private static function getClientCmd()
+    {
+        return '/usr/local/bin/mysql';
+    }
+
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
     {
         $remoteString = $remote ? 'Remote' : 'Local';
@@ -61,9 +66,11 @@ class Mysql extends AbstractDatabaseImplementation
         $name = $db->getName();
         $localDump = $db->getTempFile(true, false);
 
+        $mysql = self::getClientCmd();
+
         $import = (new ScenarioStep('Import Database', false))
             ->setCommands([
-                "mysql --defaults-file=" . self::CREDENTIALS_FILE . " -h {$host} -P {$port} {$name} < {$localDump}",
+                "{$mysql} --defaults-file=" . self::CREDENTIALS_FILE . " -h {$host} -P {$port} {$name} < {$localDump}",
             ]);
         return $scenario->addChainStep($import);
     }
