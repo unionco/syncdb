@@ -71,14 +71,22 @@ class Mysql implements DatabaseImplementation
         $user = $db->getUser();
         $pass = $db->getPass();
 
+        $credentialsPath = self::CREDENTIALS_PATH;
+        $credentialsFile = self::CREDENTIALS_FILE;
+        $credsFileConditional = <<<EOFPHP
+if [ -f {$credentialsFile} ]
+then
+  chmod 0600 {$credentialsFile}
+fi
+EOFPHP;
         return [
-            "mkdir -p " . self::CREDENTIALS_PATH . "",
-            "chmod 0700 " . self::CREDENTIALS_PATH . "",
-            "if test -f " . self::CREDENTIALS_FILE . "; then chmod 0600 " . self::CREDENTIALS_FILE . "; else touch " . self::CREDENTIALS_FILE . "; fi",
-            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > " . self::CREDENTIALS_FILE . "",
-            "echo user={$user} >> " . self::CREDENTIALS_FILE . "",
-            "echo password={$pass} >> " . self::CREDENTIALS_FILE . "",
-            "chmod 0400 " . self::CREDENTIALS_FILE . "",
+            "mkdir -p {$credentialsPath}",
+            "chmod 0700 {$credentialsPath}",
+            $credsFileConditional,
+            "echo [" . ($dump ? 'mysqldump' : 'mysql') . "] > {$credentialsFile}",
+            "echo user={$user} >> {$credentialsFile}",
+            "echo password={$pass} >> {$credentialsFile}",
+            "chmod 0400 {$credentialsFile}",
         ];
     }
     /** @inheritdoc */
