@@ -75,10 +75,13 @@ class Postgres extends AbstractDatabaseImplementation
         $pass = $db->getPass();
 
         $connectionString = "*:*:*:*:{$pass}";
+        $credentialsFile = self::CREDENTIALS_FILE;
+        $credentialsBackup = self::CREDENTIALS_FILE_BACKUP;
+
         return [
-            "if test -f " . self::CREDENTIALS_FILE . "; then chmod 0700 " . self::CREDENTIALS_FILE . "; mv " . self::CREDENTIALS_FILE . " " . self::CREDENTIALS_FILE_BACKUP . "; else touch " . self::CREDENTIALS_FILE . "; fi",
-            "echo {$connectionString} > " . self::CREDENTIALS_FILE . "",
-            "chmod 0600 " . self::CREDENTIALS_FILE . "",
+            "if [ -f {$credentialsFile} ]; then chmod 0700 {$credentialsFile}; mv {$credentialsFile} {$credentialsBackup}; else touch {$credentialsFile}; fi",
+            "echo {$connectionString} > {$credentialsFile}",
+            "chmod 0600 {$connectionString}",
         ];
     }
 
@@ -86,8 +89,10 @@ class Postgres extends AbstractDatabaseImplementation
     /** @inheritdoc */
     public static function teardownCredentialsCommands()
     {
+        $credentialsFile = self::CREDENTIALS_FILE;
+        $credentialsBackup = self::CREDENTIALS_FILE_BACKUP;
         return [
-            "if test -f " . self::CREDENTIALS_FILE_BACKUP . "; mv " . self::CREDENTIALS_FILE_BACKUP . " " . self::CREDENTIALS_FILE . "; chmod 0600 " . self::CREDENTIALS_FILE . "; fi;",
+            "if [ -f {$credentialsBackup} ]; then mv {$credentialsBackup} {$credentialsFile}; chmod 0600 {$credentialsFile}; fi",
         ];
     }
 }
