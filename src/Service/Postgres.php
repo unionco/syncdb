@@ -13,8 +13,8 @@ use unionco\syncdb\Service\AbstractDatabaseImplementation;
 
 class Postgres extends AbstractDatabaseImplementation
 {
-    private const CREDENTIALS_FILE = '$HOME/.pgpass';
-    private const CREDENTIALS_FILE_BACKUP = '$HOME/.pgpass.bak';
+    private const CREDENTIALS_FILE = '~/.pgpass';
+    private const CREDENTIALS_FILE_BACKUP = '~/.pgpass.bak';
 
          /** @inheritdoc */
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
