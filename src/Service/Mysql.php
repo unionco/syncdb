@@ -18,7 +18,7 @@ class Mysql extends AbstractDatabaseImplementation
 
     private static function getClientCmd()
     {
-        return '/usr/local/bin/mysql';
+        return '/usr/bin/mysql';
     }
 
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
