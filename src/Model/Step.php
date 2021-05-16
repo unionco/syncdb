@@ -71,10 +71,11 @@ abstract class Step
 
         if ($this->remote && $ssh) {
             // escape quotes
-            $cmd = str_replace("'", '\'', $cmd);
-            $cmd = str_replace('"', '\"', $cmd);
+            // $cmd = str_replace("'", '\'', $cmd);
+            // $cmd = str_replace('"', '\"', $cmd);
 
-            $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
+            // $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
+            $cmd = "{$ssh->getCommandPrefix()} {$cmd}";
         }
         if ($this->ignoreWarnings) {
             $cmd .= " 2>/dev/null";
