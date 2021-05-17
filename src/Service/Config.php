@@ -25,6 +25,12 @@ class Config
         DatabaseInfo::ARGS => '',
     ];
 
+    /**
+     * Parse config, inheritence, database, etc for the given env handle
+     * @param array $config
+     * @param string $environmentHandle
+     * @return array{local:array,remote:array}
+     */
     public static function parseConfig(array $config, string $environmentHandle = 'production')
     {
         // get the common parts
@@ -48,6 +54,12 @@ class Config
         ];
     }
 
+    /**
+     * Handle inheritence for the given environment
+     * @param array $config
+     * @param string $environmentHandle
+     * @return array
+     */
     protected static function handleInheritance(array $config, string $environmentHandle): array
     {
         // Get the common base config for all environments
@@ -72,6 +84,10 @@ class Config
         return $environmentConfig;
     }
 
+    /**
+     * @param array $environmentConfig
+     * @return array
+     */
     protected static function parseDockerConfig(array $environmentConfig)
     {
         $defaultDockerConfig = [

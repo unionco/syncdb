@@ -49,24 +49,13 @@ class DatabaseInfo extends ValidationModel implements TableView
     /** @var string[] */
     protected $ignoreTables = [];
 
-    protected static $overrides = [];
-
-    protected $args;
-
     /**
      * Parse an array of configuration options into a DatabaseInfo (or child class) object
      * This method explicitly parses commands for a remote environment
      */
     public static function remoteFromConfig(array $opts, SshInfo $ssh): self
     {
-        // $overrides = [];
-        // if (\key_exists(self::OVERRIDE, $opts)) {
-        //     $overrides = $opts[self::OVERRIDE];
-        // }
-        // static::setOverrides($overrides);
         $model = self::remoteFromSsh($opts, $ssh);
-        // $model = self::configureOverrides($model);
-
         return $model;
     }
 
@@ -293,7 +282,7 @@ class DatabaseInfo extends ValidationModel implements TableView
      */
     public function getIgnoreTables(): array
     {
-        return $this->ignoreTables ?? [];
+        return $this->ignoreTables;
     }
 
     /**
@@ -309,31 +298,11 @@ class DatabaseInfo extends ValidationModel implements TableView
     }
 
     /**
-     * Get the value of args
-     */
-    public function getArgs(): array
-    {
-        return $this->args;
-    }
-
-    /**
-     * Set the value of args
-     *
-     * @return  self
-     */
-    public function setArgs(string $args): self
-    {
-        $this->args = $args;
-
-        return $this;
-    }
-
-    /**
      * Get the value of port
      */
-    public function getPort()
+    public function getPort(): int
     {
-        return $this->port;
+        return (int) $this->port;
     }
 
     /**
@@ -341,9 +310,11 @@ class DatabaseInfo extends ValidationModel implements TableView
      *
      * @return  self
      */
-    public function setPort($port)
+    public function setPort(mixed $port)
     {
-        $this->port = $port;
+        if (\is_numeric($port)) {
+            $this->port = intval($port);
+        }
 
         return $this;
     }
@@ -358,24 +329,5 @@ class DatabaseInfo extends ValidationModel implements TableView
             $rows[] = [$key, $value];
         }
         return $rows;
-    }
-
-    /**
-     * Get the value of overrides
-     */
-    public static function getOverrides(): array
-    {
-        return static::$overrides;
-    }
-
-    /**
-     * Set the value of overrides
-     *
-     * @return void
-     */
-    public static function setOverrides(array $overrides): void
-    {
-        static::$overrides = $overrides;
-        // return $this;
     }
 }

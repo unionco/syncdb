@@ -8,19 +8,25 @@ abstract class Step
 {
     public static $nextId = 1;
 
+    /** @var int */
     public $id;
 
+    /** @var string */
     public $name;
 
+    /** @var bool */
     public $remote = true;
 
+    /** @var string[] */
     public $commands;
 
+    /** @var bool */
     public $chain = true;
 
+    /** @var bool */
     public $ignoreWarnings = false;
 
-    public function __construct($name, $commands, $remote = true, $chain = true, $ignoreWarnings = false)
+    public function __construct(string $name, array $commands, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
     {
         $this->setName($name);
         $this->setId();
@@ -33,7 +39,7 @@ abstract class Step
 /**
  * Get the value of name
  */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -43,13 +49,17 @@ abstract class Step
      *
      * @return  self
      */
-    public function setName($name)
+    public function setName(string $name)
     {
         $this->name = $name;
 
         return $this;
     }
 
+    /**
+     * @param string[]|string $commands
+     * @return self
+     */
     public function setCommands($commands)
     {
         if (\is_array($commands)) {
@@ -60,21 +70,27 @@ abstract class Step
         return $this;
     }
 
-    public function getCommands()
+    /**
+     * @return string[]
+     */
+    public function getCommands(): array
     {
         return $this->commands;
     }
 
+    /**
+     * Return the formatted command text, based on the context
+     * @param SshInfo $ssh
+     * @param bool $scramble Should sensitive information be censored
+     * @return string
+     */
     public function getCommandString(SshInfo $ssh = null, bool $scramble = false): string
     {
+        // If the commands should be chained, join them with `&&`, otherwise `;`
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
 
+        // If the command is to be run remotely and the ssh context is provided
         if ($this->remote && $ssh) {
-            // escape quotes
-            // $cmd = str_replace("'", '\'', $cmd);
-            // $cmd = str_replace('"', '\"', $cmd);
-
-            // $cmd = "{$ssh->getCommandPrefix()} " . '\"' . $cmd . '\"';
             if ($this->ignoreWarnings) {
                 $cmd .= " 2>/dev/null";
             }
@@ -88,10 +104,13 @@ EOFPHP;
         if ($scramble) {
             return DatabaseSync::scramble($cmd);
         }
-        return $cmd;
 
+        return $cmd;
     }
 
+    /**
+     * Set the id for this step and increment the static count
+     */
     protected function setId(): void
     {
         $this->id = static::$nextId;
@@ -101,7 +120,7 @@ EOFPHP;
     /**
      * Get the value of ignoreWarnings
      */
-    public function getIgnoreWarnings()
+    public function getIgnoreWarnings(): bool
     {
         return $this->ignoreWarnings;
     }
@@ -111,7 +130,7 @@ EOFPHP;
      *
      * @return  self
      */
-    public function setIgnoreWarnings($ignoreWarnings)
+    public function setIgnoreWarnings(bool $ignoreWarnings)
     {
         $this->ignoreWarnings = $ignoreWarnings;
 
