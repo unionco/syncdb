@@ -7,46 +7,37 @@ use unionco\syncdb\Model\TableView;
 class SshInfo extends ValidationModel implements TableView
 {
     /**
-     * @var string|null
+     * @var string
      **/
     protected $user = '';
 
     /**
-     * @var string|null
+     * @var string
      **/
     protected $host = '';
 
     /**
-     * @var string|null
+     * @var int|null
      **/
-    protected $port = '';
+    protected $port = 22;
 
     /**
-     * @var string|null
+     * @var string
      **/
     protected $identity = '';
 
-    /**
-     * @var string|null $manualPrefix Let the user specify a string, e.g. `ssh user@host -p 2222 -i ~/.ssh/my_key`
-     */
-    protected $manualPrefix = '';
-
-    public static function fromSshString(string $command)
+    public static function fromSshString(string $command): self
     {
         $model = new SshInfo();
-        $model->manualPrefix = $command;
         return $model;
     }
 
-    public static function fromConfig(array $opts)
+    public static function fromConfig(array $opts): self
     {
-        // if ($manualPrefix = $opts['manualPrefix'] ?? false) {
-        //     return static::fromSshString($manualPrefix);
-        // }
         $model = new SshInfo();
         $model->setHost($opts['host'] ?? '');
         $model->setUser($opts['user'] ?? '');
-        $model->setPort($opts['port'] ?? '');
+        $model->setPort($opts['port'] ?? 22);
         $model->setIdentity($opts['identity'] ?? '');
 
         if (!$model->valid()) {
@@ -58,10 +49,6 @@ class SshInfo extends ValidationModel implements TableView
 
     public function getCommandPrefix(): string
     {
-        if ($this->manualPrefix) {
-            return $this->manualPrefix;
-        }
-
         $u = $this->getUser();
         $h = $this->getHost();
         $p = $this->getPort();
@@ -77,18 +64,13 @@ class SshInfo extends ValidationModel implements TableView
         if ($i) {
             $cmd .= " -i {$i}";
         }
-        $cmd .= " -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ";
-//         $cmdMultiline = <<<EOFPHP
-// /bin/sh << EOF
-// $cmd
-// EOF
-// EOFPHP;
-        // $cmd .= $cmdMultiline;
-        // $cmd .= ' /bin/bash -c ';
         return $cmd;
     }
 
-    public function getScpCommand($remote, $local)
+    /**
+     * Generate the scp command based on the remote and local files
+     */
+    public function getScpCommand(string $remote, string $local): string
     {
         $u = $this->getUser();
         $h = $this->getHost();
@@ -118,11 +100,6 @@ class SshInfo extends ValidationModel implements TableView
     {
         $errors = [];
         $warnings = [];
-        // var_dump($this->manualPrefix); die;
-        if ($this->manualPrefix) {
-            $this->warnings[] = 'Using manual command prefix - other attributes are ignored';
-            return true;
-        }
 
         if (!$this->host) {
             $errors[] = 'Host cannot be empty!';
@@ -149,8 +126,9 @@ class SshInfo extends ValidationModel implements TableView
 
     /**
      * Get the value of user
+     * @return string
      */
-    public function getUser()
+    public function getUser(): string
     {
         return $this->user;
     }
@@ -160,7 +138,7 @@ class SshInfo extends ValidationModel implements TableView
      *
      * @return  self
      */
-    public function setUser($user)
+    public function setUser(string $user)
     {
         $this->user = $user;
 
@@ -170,7 +148,7 @@ class SshInfo extends ValidationModel implements TableView
     /**
      * Get the value of host
      */
-    public function getHost()
+    public function getHost(): string
     {
         return $this->host;
     }
@@ -180,7 +158,7 @@ class SshInfo extends ValidationModel implements TableView
      *
      * @return  self
      */
-    public function setHost($host)
+    public function setHost(string $host)
     {
         $this->host = $host;
 
@@ -190,7 +168,7 @@ class SshInfo extends ValidationModel implements TableView
     /**
      * Get the value of port
      */
-    public function getPort()
+    public function getPort(): int
     {
         return $this->port;
     }
@@ -200,7 +178,7 @@ class SshInfo extends ValidationModel implements TableView
      *
      * @return  self
      */
-    public function setPort($port)
+    public function setPort(int $port)
     {
         $this->port = $port;
 
@@ -210,7 +188,7 @@ class SshInfo extends ValidationModel implements TableView
     /**
      * Get the value of identity
      */
-    public function getIdentity()
+    public function getIdentity(): string
     {
         return $this->identity;
     }
@@ -220,13 +198,14 @@ class SshInfo extends ValidationModel implements TableView
      *
      * @return  self
      */
-    public function setIdentity($identity)
+    public function setIdentity(string $identity)
     {
         $this->identity = $identity;
 
         return $this;
     }
 
+    /** Used for table views */
     public function getRows(): array
     {
         $keys = ['host', 'user', 'port', 'identity', 'commandPrefix', 'warnings', 'errors'];

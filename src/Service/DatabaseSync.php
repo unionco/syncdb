@@ -3,17 +3,15 @@
 namespace unionco\syncdb\Service;
 
 // use unionco\syncdbFacade;
-use unionco\syncdb\Model\Step;
-use unionco\syncdb\Model\SshInfo;
-use unionco\syncdb\Model\Scenario;
-use unionco\syncdb\Service\Config;
-use unionco\syncdb\Service\Logger;
-use unionco\syncdb\Model\SetupStep;
-use unionco\syncdb\Service\Postgres;
 use Symfony\Component\Process\Process;
 use unionco\syncdb\Model\DatabaseInfo;
-use unionco\syncdb\Model\ScenarioStep;
-use unionco\syncdb\Model\TeardownStep;
+use unionco\syncdb\Model\Scenario;
+use unionco\syncdb\Model\SshInfo;
+use unionco\syncdb\Model\Step;
+use unionco\syncdb\Service\Config;
+use unionco\syncdb\Service\Database\Mysql;
+use unionco\syncdb\Service\Database\Postgres;
+use unionco\syncdb\Service\Logger;
 
 class DatabaseSync
 {
@@ -103,10 +101,9 @@ class DatabaseSync
         $localDbPassword = $localDb->getPass();
         DatabaseSync::addStringToScramble($localDbPassword);
 
-
         return [$config, $ssh, $remoteDb, $localDb];
     }
-  /**
+    /**
      *
      * Run a command on the server described by SshInfo $ssh
      * @param SshInfo $ssh
@@ -193,7 +190,6 @@ class DatabaseSync
 
         return $scenario;
     }
-
 
     /**
      * Add steps to the given scenario to import the downloaded database

@@ -2,13 +2,13 @@
 
 namespace unionco\syncdb\Model;
 
-use unionco\syncdb\SyncDb;
-use unionco\syncdb\Model\SshInfo;
-use unionco\syncdb\Service\Logger;
 use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\SetupStep;
+use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\TeardownStep;
 use unionco\syncdb\Service\DatabaseSync;
+use unionco\syncdb\Service\Logger;
+use unionco\syncdb\SyncDb;
 
 class Scenario
 {
@@ -37,9 +37,25 @@ class Scenario
     {
         $this->name = $name;
         $this->sshContext = $sshContext;
-        if (!static::$dbSync) {
-            static::$dbSync = SyncDb::$container->get('dbSync');
+
+        static::$dbSync = SyncDb::$container->get('dbSync');
+    }
+
+    /**
+     * Run the scenario
+     */
+    public function run(): array
+    {
+        $results = [];
+
+        try {
+            $results = $this->runSection('setup');
+            $results = $this->runSection('chain', $results);
+            $results = $this->runSection('teardown', $results);
+        } catch (\Exception $e) {
+            $results = $this->runSection('teardown', $results);
         }
+        return $results;
     }
 
     /**
@@ -130,136 +146,93 @@ class Scenario
     }
 
     /**
-     * Run all of the setup steps for the scenario
-     * @return array
+     * @psalm-param 'setup'|'chain'|'teardown' $section
+     * @param array<array{stage:string,id:int,name:string,command:string,result:false|string,relatedId?:int}>
+     * @return array<array{stage:string,id:int,name:string,command:string,result:false|string,relatedId?:int}>
+     * @throws \Exception
      */
-    public function runSetup()
+    private function runSection(string $section, array $results = [])
     {
-        $results = [];
+        /** @var Logger */
+        $log = SyncDb::$container->get('log');
 
-        /** @var DatabaseSync */
-        $dbSync = static::$dbSync;
-        if (!$dbSync) {
-            throw new \Exception('Error with dependencies');
+        /** @var Step[] $steps */
+        $steps = [];
+
+        // Determine the steps to run
+        switch ($section) {
+            case 'setup':
+                $steps = $this->getSetupSteps();
+                break;
+            case 'chain':
+                $steps = $this->getChainSteps();
+                break;
+            case 'teardown':
+                $steps = $this->getTeardownSteps();
+                if ($this->undo) {
+                    $log->debug('Tearing down specific IDs: ' . join(', ', $this->undo));
+                    $undoIds = $this->undo;
+                    $steps = \array_filter($steps, function (TeardownStep $step) use ($undoIds): bool {
+                        return \in_array($step->getRelatedId(), $undoIds);
+                    });
+                } else {
+                    $log->debug('Tearing down all steps');
+                }
+            default:
+                throw new \Exception('Invalid section handle: ' . $section);
         }
 
-        foreach ($this->getSetupSteps() as $setupStep) {
-            $cmd = $setupStep->getCommandString($this->sshContext);
-            if ($setupStep->remote) {
-                $result = $dbSync->runRemote($this->sshContext, $setupStep);
+        $log->info("Starting {$section} steps");
+        foreach ($steps as $step) {
+            /** @var SshInfo|null */
+            $ssh = $this->getSshContext();
+            if (!$ssh) {
+                $log->error('SSH Context is null');
+                throw new \Exception('SSH Context is null');
+            }
+
+            /** @var string */
+            $cmd = $step->getCommandString($ssh);
+            $log->debug('Step::getCommandString($ssh) -> ' . $cmd);
+
+            /** @var string */
+            $cmdOutput = '';
+            if ($step->getRemote()) {
+                $cmdOuput = static::$dbSync->runRemote($ssh, $step);
             } else {
-                $result = $dbSync->runLocal($setupStep);
+                $cmdOutput = static::$dbSync->runLocal($step);
             }
 
-            $results[] = [
-                'stage' => 'setup',
-                'id' => $setupStep->id,
-                'name' => $setupStep->getName(),
+            if ($cmdOutput === false) {
+                $log->error('Command failed: ' . $cmd);
+                if ($section === 'setup' || $section === 'chain') {
+                    $undoIds = \array_map(function (array $result): int {
+                        return $result['id'];
+                    }, $results);
+                    $this->undo = \array_merge($this->undo, $undoIds);
+                }
+                throw new \Exception('Command failed - stopping');
+            }
+
+            $result = [
+                'stage' => $section,
+                'id' => $step->getId(),
+                'name' => $step->getName(),
                 'command' => $cmd,
-                'result' => $result,
+                'result' => $cmdOutput,
             ];
-            if ($result === false) {
-                /** @var Logger */
-                $log = SyncDb::$container->get('log');
-                $log->error(json_encode($results));
-                throw new \Exception('Stopping');
+            if ($section === 'teardown') {
+                $result['relatedId'] = $step->getRelatedId();
             }
+            $results[] = $result;
         }
-        return $results;
-    }
-
-    /**
-     * Run the chained commands in the scenario. Typically, these are the main actions
-     * (not setup/cleanup commands)
-     * @return list<array{stage:string,id:int,name:string,command:string,result:string|false}>
-     */
-    public function runChain()
-    {
-        $results = [];
-
-        foreach ($this->getChainSteps() as $chainStep) {
-            $cmd = $chainStep->getCommandString($this->sshContext);
-            if ($chainStep->remote) {
-                $result = static::$dbSync->runRemote($this->sshContext, $chainStep);
-            } else {
-                $result = static::$dbSync->runLocal($chainStep);
-            }
-
-            $results[] = [
-                'stage' => 'chain',
-                'id' => (int) $chainStep->id,
-                'name' => $chainStep->getName(),
-                'command' => $cmd,
-                'result' => $result,
-            ];
-            if ($result === false) {
-                /** @var Logger */
-                $log = SyncDb::$container->get('log');
-                $log->error(json_encode($results));
-
-                $undoIds = \array_map(function ($result): int {
-                    return $result['id'];
-                }, $results);
-                $this->undo = $undoIds;
-            }
-        }
-        return $results;
-    }
-
-    public function runTeardown()
-    {
-        $results = [];
-
-        // If there are explicit undo IDs, do only those steps.
-        // Otherwise, run all teardown steps
-        /** @var TeardownStep[] */
-        $steps = $this->getTeardownSteps();
-        if ($this->undo) {
-            $undoIds = $this->undo;
-            $steps = \array_filter($steps, function (TeardownStep $step) use ($undoIds): bool {
-                return \in_array($step->relatedId, $undoIds);
-            });
-        }
-        foreach ($steps as $teardownStep) {
-            $cmd = $teardownStep->getCommandString($this->sshContext);
-            if ($teardownStep->remote) {
-                $result = static::$dbSync->runRemote($this->sshContext, $teardownStep);
-            } else {
-                $result = static::$dbSync->runLocal($teardownStep);
-            }
-
-            $results[] = [
-                'stage' => 'teardown',
-                'id' => $teardownStep->id,
-                'name' => $teardownStep->getName(),
-                'relatedId' => $teardownStep->relatedId,
-                'command' => $cmd,
-                'result' => $result,
-            ];
-            if ($result === false) {
-                throw new \Exception('Stopping');
-                // run related teardown
-            }
-        }
-        return $results;
-    }
-
-    public function run(): array
-    {
-        $results = [];
-
-        try {
-            $results = $this->runSetup();
-            $results = \array_merge($results, $this->runChain());
-            $results = \array_merge($results, $this->runTeardown());
-        } catch (\Exception $e) {
-            $results = array_merge($results, $this->runTeardown());
-        }
+        $log->info("Finished {$section} steps");
         return $results;
     }
 
     /**
      * Get the value of sshContext
+     * @return SshInfo|null
      */
     public function getSshContext()
     {
@@ -271,7 +244,7 @@ class Scenario
      *
      * @return  self
      */
-    public function setSshContext($sshContext)
+    public function setSshContext(SshInfo $sshContext)
     {
         $this->sshContext = $sshContext;
 

@@ -1,13 +1,13 @@
 <?php
 
-namespace unionco\syncdb\Service;
+namespace unionco\syncdb\Service\Database;
 
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\Scenario;
 use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\TeardownStep;
-use unionco\syncdb\Service\AbstractDatabaseImplementation;
+use unionco\syncdb\Service\Database\AbstractDatabaseImplementation;
 
 class Postgres extends AbstractDatabaseImplementation
 {

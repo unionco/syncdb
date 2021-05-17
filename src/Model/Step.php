@@ -6,25 +6,29 @@ use unionco\syncdb\Service\DatabaseSync;
 
 abstract class Step
 {
+    /** @var int */
     public static $nextId = 1;
 
     /** @var int */
-    public $id;
+    protected $id;
 
     /** @var string */
-    public $name;
+    protected $name = '';
 
     /** @var bool */
-    public $remote = true;
+    protected $remote = true;
 
     /** @var string[] */
-    public $commands;
+    protected $commands = [];
 
     /** @var bool */
-    public $chain = true;
+    protected $chain = true;
 
     /** @var bool */
-    public $ignoreWarnings = false;
+    protected $ignoreWarnings = false;
+
+    /** @var null|int */
+    protected $relatedId;
 
     public function __construct(string $name, array $commands, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
     {
@@ -111,10 +115,19 @@ EOFPHP;
     /**
      * Set the id for this step and increment the static count
      */
-    protected function setId(): void
+    public function setId(mixed $id = null): void
     {
-        $this->id = static::$nextId;
-        static::$nextId++;
+        if (!$id) {
+            $this->id = static::$nextId;
+            static::$nextId++;
+        } else {
+            $this->id = $id;
+        }
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     /**
@@ -134,6 +147,30 @@ EOFPHP;
     {
         $this->ignoreWarnings = $ignoreWarnings;
 
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getRelatedId()
+    {
+        return $this->relatedId;
+    }
+
+    public function setRelatedId(int $id)
+    {
+        $this->relatedId = $id;
+    }
+
+    public function getRemote(): bool
+    {
+        return $this->remote;
+    }
+
+    public function setRemote(bool $remote): self
+    {
+        $this->remote = $remote;
         return $this;
     }
 }

@@ -5,10 +5,10 @@ namespace unionco\syncdb\Model;
 abstract class ValidationModel
 {
     /** @var string[] */
-    protected $warnings;
+    protected $warnings = [];
 
     /** @var string[] */
-    protected $errors;
+    protected $errors = [];
 
     public function valid(): bool
     {
@@ -35,7 +35,7 @@ abstract class ValidationModel
      *
      * @return  self
      */
-    public function setWarnings($warnings)
+    public function setWarnings(array $warnings)
     {
         $this->warnings = $warnings;
 
@@ -62,7 +62,7 @@ abstract class ValidationModel
      *
      * @return  self
      */
-    public function setErrors($errors)
+    public function setErrors(array $errors)
     {
         $this->errors = $errors;
 

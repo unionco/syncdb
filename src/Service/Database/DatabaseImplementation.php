@@ -1,6 +1,6 @@
 <?php
 
-namespace unionco\syncdb\Service;
+namespace unionco\syncdb\Service\Database;
 
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\Scenario;

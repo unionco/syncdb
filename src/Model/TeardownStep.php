@@ -6,13 +6,11 @@ use unionco\syncdb\Model\Step;
 
 class TeardownStep extends Step
 {
-    public $relatedId;
-
-    public function __construct($name, $commands, $related = null, $remote = true, $chain = false, $ignoreWarnings = false)
+    public function __construct(string $name, array $commands, Step $related = null, bool $remote = true, bool $chain = false, bool $ignoreWarnings = false)
     {
         parent::__construct($name, $commands, $remote, $chain, $ignoreWarnings);
         if ($related) {
-            $this->relatedId = $related->id;
+            $this->setRelatedId($related->getId());
         }
     }
 }

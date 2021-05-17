@@ -1,17 +1,20 @@
 <?php
 
-namespace unionco\syncdb\Service;
+namespace unionco\syncdb\Service\Database;
 
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\Scenario;
-use unionco\syncdb\Model\ScenarioStep;
+use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\Step;
 use unionco\syncdb\Model\TeardownStep;
-use unionco\syncdb\Service\DatabaseImplementation;
+use unionco\syncdb\Service\Database\DatabaseImplementation;
 
 abstract class AbstractDatabaseImplementation implements DatabaseImplementation
 {
+    /**
+     * Add steps to the scenario to remotely dump the database
+     */
     public static function dumpDatabase(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $ssh = $scenario->getSshContext();
@@ -30,6 +33,9 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         return $scenario;
     }
 
+    /**
+     * Add steps to the scenario to import the database locally
+     */
     public static function importDatabase(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         // Setup a config file, used for mysql client
@@ -44,6 +50,9 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         return $scenario;
     }
 
+    /**
+     * Add steps to the scenario to archive and compress the database dump
+     */
     public static function archive(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         /** @var string /tmp/db.dump.bz2 */
@@ -52,7 +61,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         $remoteTempDir = $db->getTempDir(true);
         $remoteTempDump = $db->getTempFile(false, true);
 
-        $chain = (new ScenarioStep('Archive', true))
+        $chain = (new ChainStep('Archive', true))
             ->setCommands([
                 "tar -cvjf {$remoteArchiveTarget} -C {$remoteTempDir} {$remoteTempDump}",
             ]);
@@ -66,6 +75,9 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ->addTeardownStep($teardown);
     }
 
+    /**
+     * Add steps to the scenario to download the archive
+     */
     public static function download(Scenario $scenario, DatabaseInfo $db, SshInfo $ssh): Scenario
     {
         $remoteDownloadSource = $db->getArchiveFile(true, true);
@@ -73,7 +85,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
 
         $scpCommand = $ssh->getScpCommand($remoteDownloadSource, $localDownloadTarget);
 
-        $downloadArchive = (new ScenarioStep(
+        $downloadArchive = (new ChainStep(
             'Download Archive File',
             false))->setCommands([$scpCommand]);
 
@@ -87,6 +99,9 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ->addTeardownStep($teardownDownload);
     }
 
+    /**
+     * Add steps to the scenario to unarchive the downloaded file
+     */
     public static function unarchive(Scenario $scenario, DatabaseInfo $db): Scenario
     {
         $localTempDir = $db->getTempDir(false);
@@ -94,7 +109,7 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         $localArchive = $db->getArchiveFile(true, false);
         $localTempFile = $db->getTempFile(true, false);
 
-        $localUnarchive = (new ScenarioStep('Unarchive Local SQL file', false))
+        $localUnarchive = (new ChainStep('Unarchive Local SQL file', false))
             ->setCommands([
                 "tar -C {$localTempDir} -xjf {$localArchive}",
             ]);
@@ -103,10 +118,5 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ["rm {$localTempFile}"], $localUnarchive, false);
         return $scenario->addChainStep($localUnarchive)
             ->addTeardownStep($removeSqlFile);
-    }
-
-    public static function dump(Scenario $scenario, DatabaseInfo $db): Scenario
-    {
-        return $scenario;
     }
 }

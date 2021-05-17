@@ -1,15 +1,15 @@
 <?php
 
-namespace unionco\syncdb\Service;
+namespace unionco\syncdb\Service\Database;
 
 use unionco\syncdb\Model\Step;
 use unionco\syncdb\Model\Scenario;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\DatabaseInfo;
-use unionco\syncdb\Model\ScenarioStep;
+use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\TeardownStep;
-use unionco\syncdb\Service\DatabaseImplementation;
-use unionco\syncdb\Service\AbstractDatabaseImplementation;
+use unionco\syncdb\Service\Database\DatabaseImplementation;
+use unionco\syncdb\Service\Database\AbstractDatabaseImplementation;
 
 class Mysql extends AbstractDatabaseImplementation
 {
@@ -48,7 +48,7 @@ class Mysql extends AbstractDatabaseImplementation
 
         $credentialsFile = self::CREDENTIALS_FILE;
 
-        $dump = (new ScenarioStep('MySQL Dump', true))
+        $dump = (new ChainStep('MySQL Dump', true))
             ->setCommands([
                 "mysqldump --defaults-extra-file={$credentialsFile} --no-tablespaces -h {$host} -P {$port} {$name} > {$remoteTempDump}",
             ]);
@@ -68,7 +68,7 @@ class Mysql extends AbstractDatabaseImplementation
 
         $mysql = self::getClientCmd();
 
-        $import = (new ScenarioStep('Import Database', false))
+        $import = (new ChainStep('Import Database', false))
             ->setCommands([
                 "{$mysql} --defaults-file=" . self::CREDENTIALS_FILE . " -h {$host} -P {$port} {$name} < {$localDump}",
             ]);
