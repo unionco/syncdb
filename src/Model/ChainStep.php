@@ -9,8 +9,8 @@ namespace unionco\syncdb\Model;
  */
 class ChainStep extends Step
 {
-    public function __construct(string $name, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
-    {
-        parent::__construct($name, [], $remote, $chain, $ignoreWarnings);
-    }
+    // public function __construct(string $name, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
+    // {
+    //     parent::__construct($name, [], $remote, $chain, $ignoreWarnings);
+    // }
 }

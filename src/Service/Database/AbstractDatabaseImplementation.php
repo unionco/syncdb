@@ -85,16 +85,18 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
 
         $scpCommand = $ssh->getScpCommand($remoteDownloadSource, $localDownloadTarget);
 
-        $downloadArchive = (new ChainStep(
-            'Download Archive File',
-            false))->setCommands([$scpCommand]);
+        $downloadArchive = (new ChainStep())
+            ->setName('Download Archive File')
+            ->setRemote(false)
+            ->setCommands([$scpCommand]);
 
-        $teardownDownload = new TeardownStep(
-            'Remove Local Archive File',
-            ["rm {$localDownloadTarget}"],
-            $downloadArchive,
-            false
+        $teardownDownload = (new TeardownStep())
+            ->setName('Remove Local Archive File')
+            ->setCommands(["rm {$localDownloadTarget}"])
+            ->setRelated($downloadArchive)
+            ->setRemote(false);
         );
+
         return $scenario->addChainStep($downloadArchive)
             ->addTeardownStep($teardownDownload);
     }
@@ -109,13 +111,18 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         $localArchive = $db->getArchiveFile(true, false);
         $localTempFile = $db->getTempFile(true, false);
 
-        $localUnarchive = (new ChainStep('Unarchive Local SQL file', false))
+        $localUnarchive = (new ChainStep())
+            ->setName('Unarchive Local SQL file')
+            ->setRemote(false)
             ->setCommands([
                 "tar -C {$localTempDir} -xjf {$localArchive}",
             ]);
-        $removeSqlFile = new TeardownStep(
-            'Remove Local SQL File',
-            ["rm {$localTempFile}"], $localUnarchive, false);
+        $removeSqlFile = (new TeardownStep())
+            ->setName('Remove Local SQL File')
+            ->setCommands(["rm {$localTempFile}"])
+            ->setRelated($localUnarchive)
+            ->setRemote(false);
+
         return $scenario->addChainStep($localUnarchive)
             ->addTeardownStep($removeSqlFile);
     }

@@ -30,15 +30,15 @@ abstract class Step
     /** @var null|int */
     protected $relatedId;
 
-    public function __construct(string $name, array $commands, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
-    {
-        $this->setName($name);
-        $this->setId();
-        $this->remote = $remote;
-        $this->setCommands($commands);
-        $this->chain = $chain;
-        $this->ignoreWarnings = $ignoreWarnings;
-    }
+    // public function __construct(string $name, array $commands, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
+    // {
+    //     $this->setName($name);
+    //     $this->setId();
+    //     $this->remote = $remote;
+    //     $this->setCommands($commands);
+    //     $this->chain = $chain;
+    //     $this->ignoreWarnings = $ignoreWarnings;
+    // }
 
 /**
  * Get the value of name
@@ -161,6 +161,13 @@ EOFPHP;
     public function setRelatedId(int $id)
     {
         $this->relatedId = $id;
+        return $this;
+    }
+
+    public function setRelated(Step $step)
+    {
+        $this->relatedId = $step->getId();
+        return $this;
     }
 
     public function getRemote(): bool

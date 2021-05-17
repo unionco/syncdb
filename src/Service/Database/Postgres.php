@@ -18,17 +18,17 @@ class Postgres extends AbstractDatabaseImplementation
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
     {
         $remoteString = $remote ? 'Remote' : 'Local';
-        $setup = new SetupStep(
-            "Setup {$remoteString} Postgres Credentials",
-            self::setupCredentialsCommands($db),
-            $remote
-        );
-        $teardown = new TeardownStep(
-            "Teardown {$remoteString} Postgres Credentials",
-            self::teardownCredentialsCommands(),
-            $setup,
-            $remote
-        );
+        $setup = (new SetupStep())
+            ->setName("Setup {$remoteString} Postgres Credentials")
+            ->setRemote($remote)
+            ->setCommands(self::setupCredentialsCommands($db));
+
+        $teardown = (new TeardownStep())
+            ->setName("Teardown {$remoteString} Postgres Credentials")
+            ->setCommands(self::teardownCredentialsCommands())
+            ->setRelated($setup)
+            ->setRemote($remote);
+
         return $scenario->addSetupStep($setup)
             ->addTeardownStep($teardown);
     }
@@ -44,12 +44,18 @@ class Postgres extends AbstractDatabaseImplementation
         $user = $db->getUser();
 
         $remoteDumpTarget = $db->getTempFile(true, true);
-        $dump = (new ChainStep('Postgres Dump', true))
+
+        $chain = (new ChainStep())
+            ->setName('Postgres Dump')
+            ->setRemote(true)
             ->setCommands([
                 "pg_dump -Fc -d {$name} -U {$user} -h {$host} -p {$port} > {$remoteDumpTarget}",
             ]);
-        $teardown = new TeardownStep(
-            'Remove Remote SQL File', ["rm {$remoteDumpTarget}"], $dump);
+
+        $teardown = (new TeardownStep())
+            ->setName('Remove Remote SQL File')
+            ->setCommands(["rm {$remoteDumpTarget}"])
+            ->setRelated($chain);
 
         return $scenario->addChainStep($dump)
             ->addTeardownStep($teardown);
@@ -68,12 +74,16 @@ class Postgres extends AbstractDatabaseImplementation
         $pgsqlCreds = "-U {$user} -h {$host} -p {$port}";
 
         $localDump = $db->getTempFile(true, false);
-        $import = (new ChainStep('Import Database', false))
+
+        $import = (new ChainStep())
+            ->setName('Import Database')
+            ->setRemote(false)
             ->setCommands([
                 "dropdb --force {$pgsqlCreds} {$name}",
                 "createdb {$pgsqlCreds} {$name}",
                 "pg_restore --clean --if-exists --no-password -e -d {$name} {$pgsqlCreds} {$localDump}",
             ]);
+
         return $scenario->addChainStep($import);
     }
 

@@ -24,17 +24,17 @@ class Mysql extends AbstractDatabaseImplementation
     public static function credentials(Scenario $scenario, DatabaseInfo $db, bool $remote): Scenario
     {
         $remoteString = $remote ? 'Remote' : 'Local';
-        $setup = new SetupStep(
-            "Setup {$remoteString} MySQL Credentials",
-            self::setupCredentialsCommands($db, $remote),
-            $remote
-        );
-        $teardown = new TeardownStep(
-            "Teardown {$remoteString} MySQL Credentials",
-            self::teardownCredentialsCommands(),
-            $setup,
-            $remote
-        );
+        $setup = (new SetupStep())
+            ->setName("Setup {$remoteString} MySQL Credentials")
+            ->setCommands(self::setupCredentialsCommands($db, $remote))
+            ->setRemote($remote);
+
+        $teardown = (new TeardownStep())
+            ->setName("Teardown {$remoteString} MySQL Credentials")
+            ->setCommands(self::teardownCredentialsCommands())
+            ->setRelated($setup)
+            ->setRemote($remote);
+
         return $scenario->addSetupStep($setup)
             ->addTeardownStep($teardown);
     }
@@ -48,12 +48,18 @@ class Mysql extends AbstractDatabaseImplementation
 
         $credentialsFile = self::CREDENTIALS_FILE;
 
-        $dump = (new ChainStep('MySQL Dump', true))
+        $chain = (new ChainStep())
+            ->setName('MySQL Dump')
+            ->setRemote(true)
             ->setCommands([
                 "mysqldump --defaults-extra-file={$credentialsFile} --no-tablespaces -h {$host} -P {$port} {$name} > {$remoteTempDump}",
             ]);
-        $teardown = new TeardownStep(
-            'Remove Remote SQL File', ["rm {$db->getTempFile()}"], $dump);
+
+        $teardown = (new TeardownStep())
+            ->setName('Remove Remote SQL File')
+            ->setCommands(["rm {$remoteTempDump}"])
+            ->setRemote(true)
+            ->setRlated($chain);
 
         return $scenario->addChainStep($dump)
             ->addTeardownStep($teardown);
@@ -68,10 +74,13 @@ class Mysql extends AbstractDatabaseImplementation
 
         $mysql = self::getClientCmd();
 
-        $import = (new ChainStep('Import Database', false))
+        $import = (new ChainStep())
+            ->setName('Import Database')
+            ->setRemote(false)
             ->setCommands([
                 "{$mysql} --defaults-file=" . self::CREDENTIALS_FILE . " -h {$host} -P {$port} {$name} < {$localDump}",
             ]);
+
         return $scenario->addChainStep($import);
     }
 

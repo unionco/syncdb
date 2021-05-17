@@ -33,11 +33,9 @@ class Scenario
     /** @var DatabaseSync */
     protected static $dbSync;
 
-    public function __construct(string $name, SshInfo $sshContext)
+    public function __construct(string $name = '')
     {
         $this->name = $name;
-        $this->sshContext = $sshContext;
-
         static::$dbSync = SyncDb::$container->get('dbSync');
     }
 

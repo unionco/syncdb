@@ -43,7 +43,9 @@ class DatabaseSync
     {
         [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
 
-        $scenario = new Scenario('Sync Database', $ssh);
+        $scenario = (new Scenario('Sync Database'))
+            ->setSshContext($ssh);
+
         $scenario = $this->dumpDatabase($scenario, $remoteDb);
         $scenario = $this->importDatabase($scenario, $localDb);
 
@@ -68,7 +70,8 @@ class DatabaseSync
     {
         [$config, $ssh, $remoteDb, $localDb] = self::parseConfigAndDatabases($config, $environment);
 
-        $scenario = new Scenario('Sync Database', $ssh);
+        $scenario = (new Scenario('Sync Database'))
+            ->setSshContext($ssh);
         $scenario = $this->dumpDatabase($scenario, $remoteDb);
         $scenario = $this->importDatabase($scenario, $localDb);
 
@@ -85,7 +88,6 @@ class DatabaseSync
             'local' => $localConfig,
         ] = Config::parseConfig($config, $environment);
 
-        // var_dump($config); die;
         if (!$remoteConfig) {
             throw new \Exception('Remote Config is invalid');
         } elseif (!$localConfig) {
@@ -98,6 +100,7 @@ class DatabaseSync
 
         $remoteDbPassword = $remoteDb->getPass();
         DatabaseSync::addStringToScramble($remoteDbPassword);
+
         $localDbPassword = $localDb->getPass();
         DatabaseSync::addStringToScramble($localDbPassword);
 
