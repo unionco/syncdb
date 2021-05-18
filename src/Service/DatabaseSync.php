@@ -15,6 +15,7 @@ use unionco\syncdb\Service\Logger;
 
 class DatabaseSync
 {
+    public const PROCESS_TIMEOUT = 360;
     private $logger;
 
     /**
@@ -118,7 +119,7 @@ class DatabaseSync
         $cmd = $step->getCommandString($ssh);
         $this->logger->info(static::scramble($cmd));
 
-        $proc = Process::fromShellCommandline($cmd);
+        $proc = Process::fromShellCommandline($cmd, null, null, null, self::PROCESS_TIMEOUT);
 
         try {
             $proc->mustRun();
@@ -149,7 +150,7 @@ class DatabaseSync
         $cmd = $step->getCommandString();
         $this->logger->info($cmd);
 
-        $proc = Process::fromShellCommandline($cmd);
+        $proc = Process::fromShellCommandline($cmd, null, null, null, self::PROCESS_TIMEOUT);
 
         try {
             $proc->mustRun();

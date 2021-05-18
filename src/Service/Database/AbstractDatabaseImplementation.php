@@ -2,9 +2,9 @@
 
 namespace unionco\syncdb\Service\Database;
 
+use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\DatabaseInfo;
 use unionco\syncdb\Model\Scenario;
-use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\SshInfo;
 use unionco\syncdb\Model\Step;
 use unionco\syncdb\Model\TeardownStep;
@@ -61,15 +61,20 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
         $remoteTempDir = $db->getTempDir(true);
         $remoteTempDump = $db->getTempFile(false, true);
 
-        $chain = (new ChainStep('Archive', true))
+        $chain = (new ChainStep())
+            ->setName('Archive')
+            ->setRemote(true)
             ->setCommands([
                 "tar -cvjf {$remoteArchiveTarget} -C {$remoteTempDir} {$remoteTempDump}",
             ]);
         if (!$chain) {
             throw new \Exception('Invalid step');
         }
-        $teardown = new TeardownStep(
-            'Remote Remote Archive File', ["rm {$remoteArchiveTarget}"], $chain, true);
+        $teardown = (new TeardownStep())
+            ->setName('Remote Remote Archive File')
+            ->setCommands(["rm {$remoteArchiveTarget}"])
+            ->setRelated($chain)
+            ->setRemote(true);
 
         return $scenario->addChainStep($chain)
             ->addTeardownStep($teardown);
