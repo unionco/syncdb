@@ -337,6 +337,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         foreach ($keys as $key) {
             $getter = "get" . \ucFirst($key);
             $value = $this->{$getter}() ?? '(empty)';
+            $value = preg_replace("\n", '\n', $value);
             $rows[] = [$key, $value];
         }
         return $rows;

@@ -213,7 +213,9 @@ class SshInfo extends ValidationModel implements TableView
         $rows = [];
         foreach ($keys as $key) {
             $getter = "get" . \ucFirst($key);
-            $rows[] = [$key, $this->{$getter}()];
+            $value = $this->{$getter}();
+            $value = preg_replace("\n", '\n', $value);
+            $rows[] = [$key, $value];
         }
         return $rows;
     }
