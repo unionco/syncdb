@@ -188,7 +188,7 @@ class DatabaseSync
                 $scenario = Postgres::dumpDatabase($scenario, $db);
                 break;
             default:
-                throw new \Exception('Invalid driver');
+                throw new \Exception('Invalid driver: ' . $driver);
         }
 
         return $scenario;
