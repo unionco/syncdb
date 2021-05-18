@@ -90,9 +90,10 @@ abstract class Step
      * Return the formatted command text, based on the context
      * @param SshInfo $ssh
      * @param bool $scramble Should sensitive information be censored
+     * @param bool $stripNewslines Replace newlines with a literal '\n'
      * @return string
      */
-    public function getCommandString(SshInfo $ssh = null, bool $scramble = false): string
+    public function getCommandString(SshInfo $ssh = null, bool $scramble = false, bool $stripNewlines): string
     {
         // If the commands should be chained, join them with `&&`, otherwise `;`
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
@@ -113,6 +114,9 @@ EOFPHP;
             return DatabaseSync::scramble($cmd);
         }
 
+        if ($stripNewlines) {
+            $cmd = preg_replace("\n", '\n', $cmd);
+        }
         return $cmd;
     }
 
