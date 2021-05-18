@@ -176,6 +176,7 @@ class Scenario
                 } else {
                     $log->debug('Tearing down all steps');
                 }
+                break;
             default:
                 throw new \Exception('Invalid section handle: ' . $section);
         }
