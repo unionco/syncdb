@@ -115,7 +115,7 @@ EOFPHP;
         }
 
         if ($stripNewlines) {
-            $cmd = preg_replace("\n", '\n', $cmd);
+            $cmd = preg_replace("\n", "\\n", $cmd);
         }
         return $cmd;
     }
