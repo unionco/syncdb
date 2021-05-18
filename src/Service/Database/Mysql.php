@@ -59,7 +59,7 @@ class Mysql extends AbstractDatabaseImplementation
             ->setName('Remove Remote SQL File')
             ->setCommands(["rm {$remoteTempDump}"])
             ->setRemote(true)
-            ->setRlated($chain);
+            ->setRelated($chain);
 
         return $scenario->addChainStep($dump)
             ->addTeardownStep($teardown);
