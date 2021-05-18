@@ -61,7 +61,7 @@ class Mysql extends AbstractDatabaseImplementation
             ->setRemote(true)
             ->setRelated($chain);
 
-        return $scenario->addChainStep($dump)
+        return $scenario->addChainStep($chain)
             ->addTeardownStep($teardown);
     }
 
