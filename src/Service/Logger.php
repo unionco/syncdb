@@ -11,7 +11,7 @@ class Logger
     /** @var null|ML */
     private $ml;
 
-    public const LINE_FORMAT = "[%datetime%] %level_name% - %message%\n\n";
+    public const LINE_FORMAT = "[%datetime%] %level_name%\n%message%\n";
 
     public function __construct(string $logPath = null)
     {
