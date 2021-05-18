@@ -93,7 +93,7 @@ abstract class Step
      * @param bool $stripNewslines Replace newlines with a literal '\n'
      * @return string
      */
-    public function getCommandString(SshInfo $ssh = null, bool $scramble = false, bool $stripNewlines): string
+    public function getCommandString(SshInfo $ssh = null, bool $scramble = false, bool $stripNewlines = false): string
     {
         // If the commands should be chained, join them with `&&`, otherwise `;`
         $cmd = join($this->chain ? ' && ' : '; ', $this->getCommands());
