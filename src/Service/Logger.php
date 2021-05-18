@@ -13,7 +13,7 @@ class Logger
 
     public const LINE_FORMAT = "[%datetime%] %level_name% - %message%\n\n";
 
-    public function __construct()
+    public function __construct(string $logPath = null)
     {
         if (class_exists('Monolog\Logger')) {
             // $this->logger = new Logger()
@@ -22,6 +22,11 @@ class Logger
             $stdoutHandler->setFormatter(new LineFormatter(self::LINE_FORMAT, "Y-m-d H:i:s", true, true));
             // $fileHandler = new StreamHandler('/tmp/syncdb.log')
             $this->ml->pushHandler($stdoutHandler);
+            if ($logPath) {
+                $fileHandler = new StreamHandler($logPath);
+                $fileHandler->setFormatter(new LineFormatter(self::LINE_FORMAT, "Y-m-d H:i:s", true, true));
+                $this->ml->pushHandler($fileHandler);
+            }
         }
     }
 
