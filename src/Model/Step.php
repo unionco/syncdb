@@ -30,6 +30,10 @@ abstract class Step
     /** @var null|int */
     protected $relatedId;
 
+    public function __construct()
+    {
+        $this->setId();
+    }
     // public function __construct(string $name, array $commands, bool $remote = true, bool $chain = true, bool $ignoreWarnings = false)
     // {
     //     $this->setName($name);
