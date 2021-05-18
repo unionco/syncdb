@@ -95,7 +95,6 @@ abstract class AbstractDatabaseImplementation implements DatabaseImplementation
             ->setCommands(["rm {$localDownloadTarget}"])
             ->setRelated($downloadArchive)
             ->setRemote(false);
-        );
 
         return $scenario->addChainStep($downloadArchive)
             ->addTeardownStep($teardownDownload);
