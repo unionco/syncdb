@@ -136,7 +136,11 @@ class DatabaseInfo extends ValidationModel implements TableView
             $matches = [];
             \preg_match_all($rule, $output, $matches, PREG_SET_ORDER, 0);
             if ($matches) {
-                $model->{$handle} = $matches[0][1];
+                $value = $matches[0][1];
+                $value = \str_replace('"', '', $value);
+                $value = \str_replace("'", '', $value);
+                $value = trim($value);
+                $model->{$handle} = $value;
             }
         }
         if (!$model->valid()) {
