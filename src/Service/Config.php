@@ -26,6 +26,48 @@ class Config
     ];
 
     /**
+     * Get the default configuration as a PHP array
+     * @return array
+     */
+    public static function getDefaultConfig(array $opts = []): array
+    {
+        $driver = 'mysql';
+        if ($d = $opts['driver'] ?? false) {
+            $driver = $d;
+        }
+        $basePath = '$HOME';
+        if ($b = $opts['basePath'] ?? false) {
+            $basePath = $b;
+        }
+
+        return [
+            'common' => [
+                'remoteWorkingDir' => '/var/www/',
+                'localWorkingDir' => $basePath,
+                'ignoreTables' => [
+                    "craft_templatecaches",
+                    "craft_templatecachequeries",
+                    "craft_templatecacheelements",
+                    "craft_sessions",
+                    "craft_cache",
+                ],
+                'driver' => $driver,
+                'port' => 22,
+            ],
+            'production' => [
+                'user' => '',
+                'host' => '',
+                'identity' => '',
+            ],
+            'staging' => [
+                'user' => '',
+                'host' => '',
+                'identity' => '',
+            ],
+        ];
+    }
+
+    /**
      * Parse config, inheritence, database, etc for the given env handle
      * @param array $config
      * @param string $environmentHandle
@@ -37,11 +79,6 @@ class Config
         $common = $config[self::C_COMMON] ?? [];
         $common = \array_merge(self::DEFAULT_CONFIG, $common);
 
-        // Check to see if there are any global db overrides
-        $dbOverrides = [];
-        if (\key_exists(DatabaseInfo::OVERRIDE, $common)) {
-            $dbOverrides = $common[DatabaseInfo::OVERRIDE];
-        }
         $remoteEnvironment = self::handleInheritance($config, $environmentHandle);
         $remoteEnvironment = self::parseDockerConfig($remoteEnvironment);
 

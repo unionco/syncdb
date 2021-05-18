@@ -16,7 +16,6 @@ class DatabaseInfo extends ValidationModel implements TableView
     public const MYSQL = 'mysql';
     public const POSTGRES = 'pgsql';
 
-    public const OVERRIDE = 'dbOverride';
     public const DRIVER = 'driver';
     public const PORT = 'port';
     public const HOST = 'host';

@@ -1,6 +1,6 @@
 {
     "name": "unionco/syncdb",
-    "version": "0.8.0",
+    "version": "0.10.0",
     "description": "Library to assist with syncing databases across different environments",
     "type": "library",
     "license": "MIT",
