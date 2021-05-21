@@ -20,10 +20,6 @@ class SyncDb
             ->addArgument($logPath)
             ->addArgument($logLevel);
         static::$container->add('dbSync', DatabaseSync::class)->addArgument('log');
-
-        if ($logPath) {
-            static::$container->get('log')->pushHandler($logPath);
-        }
     }
 
     public function run(array $config, string $environment)

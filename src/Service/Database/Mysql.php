@@ -48,11 +48,12 @@ class Mysql extends AbstractDatabaseImplementation
 
         $credentialsFile = self::CREDENTIALS_FILE;
 
+        $ignoreTables = self::_ignoreTablesSubCommand($db);
         $chain = (new ChainStep())
             ->setName('MySQL Dump')
             ->setRemote(true)
             ->setCommands([
-                "mysqldump --defaults-extra-file={$credentialsFile} --no-tablespaces -h {$host} -P {$port} {$name} > {$remoteTempDump}",
+                "mysqldump --defaults-extra-file={$credentialsFile} {$ignoreTables} --no-tablespaces -h {$host} -P {$port} {$name} > {$remoteTempDump}",
             ]);
 
         $teardown = (new TeardownStep())
@@ -114,5 +115,24 @@ EOFPHP;
         return [
             "rm " . self::CREDENTIALS_FILE . "",
         ];
+    }
+
+    private static function _ignoreTablesSubCommand(DatabaseInfo $db): string
+    {
+        /** @var string[] */
+        $tables = $db->getIgnoreTables();
+        if (!$tables) {
+            return "";
+        }
+        $cliArgs = \array_map(function (string $tableName) use ($db) : string {
+            $withDbName = $tableName;
+            if (strpos($tableName, '.') !== false) {
+                $name = $db->getName();
+                $withDbName = "{$name}.{$tableName}";
+            }
+            return " --ignore-table={$withDbName} ";
+        }, $tables);
+
+        return join('', $cliArgs);
     }
 }
