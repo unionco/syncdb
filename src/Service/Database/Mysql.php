@@ -128,7 +128,7 @@ EOFPHP;
         }
         $cliArgs = \array_map(function (string $tableName) use ($db) : string {
             $withDbName = $tableName;
-            if (strpos($tableName, '.') !== false) {
+            if (strpos($tableName, '.') === false) {
                 $name = $db->getName();
                 $withDbName = "{$name}.{$tableName}";
             }
