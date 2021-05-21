@@ -2,11 +2,12 @@
 
 namespace unionco\syncdb\Service\Database;
 
+use unionco\syncdb\SyncDb;
 use unionco\syncdb\Model\Step;
 use unionco\syncdb\Model\Scenario;
+use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\SetupStep;
 use unionco\syncdb\Model\DatabaseInfo;
-use unionco\syncdb\Model\ChainStep;
 use unionco\syncdb\Model\TeardownStep;
 use unionco\syncdb\Service\Database\DatabaseImplementation;
 use unionco\syncdb\Service\Database\AbstractDatabaseImplementation;
@@ -122,6 +123,7 @@ EOFPHP;
         /** @var string[] */
         $tables = $db->getIgnoreTables();
         if (!$tables) {
+            $log = SyncDb::$container->get('log')->warning('No ignore tables defined');
             return "";
         }
         $cliArgs = \array_map(function (string $tableName) use ($db) : string {

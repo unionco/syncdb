@@ -55,6 +55,15 @@ class DatabaseInfo extends ValidationModel implements TableView
     public static function remoteFromConfig(array $opts, SshInfo $ssh): self
     {
         $model = self::remoteFromSsh($opts, $ssh);
+        $model = self::setStaticConfig($model, $opts);
+        return $model;
+    }
+
+    public static function setStaticConfig(self $model, array $config): self
+    {
+        $ignoreTables = $config['ignoreTables'] ?? [];
+        $model->setIgnoreTables($ignoreTables);
+
         return $model;
     }
 
@@ -100,6 +109,7 @@ class DatabaseInfo extends ValidationModel implements TableView
 
     public static function localFromConfig(array $config): self
     {
+
         $localWorkingDir = $config['localWorkingDir'];
         $cmd = (new SetupStep())
             ->setName('Get Local DB Config')
@@ -109,7 +119,7 @@ class DatabaseInfo extends ValidationModel implements TableView
         $service = SyncDb::$container->get('dbSync');
         $result = $service->runLocal($cmd);
         $model = self::fromGrepOutput($result);
-
+        $model = self::setStaticConfig($model, $config);
         return $model;
     }
 
