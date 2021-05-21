@@ -25,8 +25,6 @@ class DatabaseInfo extends ValidationModel implements TableView
     public const ARGS = 'args';
     public const IGNORE_TABLES = 'ignoreTables';
 
-    // public static $readFromDotEnv = false;
-
     /** @var string */
     protected $driver = 'mysql';
 

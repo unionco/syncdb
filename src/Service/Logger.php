@@ -16,11 +16,10 @@ class Logger
     public function __construct(string $logPath = null, int $logLevel = 100)
     {
         if (class_exists('Monolog\Logger')) {
-            // $this->logger = new Logger()
             $this->ml = new ML('default');
             $stdoutHandler = new StreamHandler('php://stdout', $logLevel);
             $stdoutHandler->setFormatter(new LineFormatter(self::LINE_FORMAT, "Y-m-d H:i:s", true, true));
-            // $fileHandler = new StreamHandler('/tmp/syncdb.log')
+
             $this->ml->pushHandler($stdoutHandler);
             if ($logPath) {
                 $fileHandler = new StreamHandler($logPath, $logLevel);
@@ -30,6 +29,10 @@ class Logger
         }
     }
 
+    /**
+     * @param string $name
+     * @param mixed[] $args
+     */
     public function __call($name, $args)
     {
         if ($this->ml) {
