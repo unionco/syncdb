@@ -319,11 +319,12 @@ class DatabaseInfo extends ValidationModel implements TableView
     /**
      * Set the value of port
      *
+     * @param int|string $port
      * @return  self
      */
-    public function setPort(mixed $port)
+    public function setPort($port)
     {
-        if (\is_numeric($port)) {
+        if (\is_int($port) || \is_numeric($port)) {
             $this->port = intval($port);
         }
 

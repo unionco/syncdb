@@ -13,10 +13,12 @@ class SyncDb
     /**
      * @param string $logPath
      */
-    public function __construct($logPath = null)
+    public function __construct(string $logPath = null, int $logLevel = 100)
     {
         static::$container = new Container();
-        static::$container->add('log', Logger::class)->addArgument($logPath);
+        static::$container->add('log', Logger::class)
+            ->addArgument($logPath)
+            ->addArgument($logLevel);
         static::$container->add('dbSync', DatabaseSync::class)->addArgument('log');
 
         if ($logPath) {
